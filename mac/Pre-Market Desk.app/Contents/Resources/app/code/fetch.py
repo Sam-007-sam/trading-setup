@@ -240,11 +240,11 @@ def nse_session() -> requests.Session:
 
 
 def _nse_json(s: requests.Session, url: str) -> dict:
-    r = s.get(url, timeout=20, allow_redirects=False)
-    if r.status_code in (301, 302, 303, 307, 308):
-        raise ValueError(f"NSE redirected the request ({r.headers.get('Location', '?')}); "
-                         "it usually blocks cloud servers, try running from home")
-    r.raise_for_status()
+    r = s.get(url, timeout=20)
+    if not r.ok:
+        moved = f" (redirected to {r.url})" if r.history else ""
+        raise ValueError(f"HTTP {r.status_code}{moved}; NSE often blocks cloud servers, "
+                         "so this usually works when run from home")
     return r.json()
 
 
