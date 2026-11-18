@@ -2,8 +2,15 @@ name: Pre-market brief
 
 on:
   schedule:
-    - cron: "45 2 * * 1-5"   # 02:45 UTC = 08:15 IST, Monday to Friday
-  workflow_dispatch: {}       # "Run workflow" button for manual refreshes
+    - cron: "45 2 * * 1-5"    # 02:45 UTC = 08:15 IST: morning brief and everything else
+    - cron: "15 10 * * 1-5"   # 10:15 UTC = 3:45 PM IST: after the close, paper trading and backtests only
+  workflow_dispatch:          # "Run workflow" button for manual refreshes
+    inputs:
+      run:
+        description: "morning = everything; evening = after-close update (no new brief)"
+        type: choice
+        options: [morning, evening]
+        default: morning
 
 permissions:
   contents: write
@@ -16,6 +23,8 @@ jobs:
   brief:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    env:
+      EVENING: ${{ github.event.schedule == '15 10 * * 1-5' || inputs.run == 'evening' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -24,6 +33,7 @@ jobs:
           cache: pip
       - run: pip install -r requirements.txt
       - name: Build brief
+        if: env.EVENING != 'true'
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: python fetch.py
@@ -32,6 +42,7 @@ jobs:
       - name: Intraday backtest
         run: python intraday.py || echo "intraday backtest failed; keeping the previous results"
       - name: Walk-forward research
+        if: env.EVENING != 'true'
         run: python walkforward.py || echo "walk-forward failed; keeping the previous results"
       - name: Paper trading
         run: python paper.py || echo "paper trading update failed; keeping the previous ledger"
@@ -41,5 +52,6 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add docs/data
           git diff --cached --quiet && exit 0
-          git commit -m "Brief $(TZ=Asia/Kolkata date +%F)"
-          git push
+          if [ "$EVENING" = "true" ]; then msg="After-close update"; else msg="Brief"; fi
+          git commit -m "$msg $(TZ=Asia/Kolkata date +%F)"
+          git pull --rebase -q && git push
