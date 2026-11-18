@@ -1,0 +1,32 @@
+name: Trade desk live paper test
+
+on:
+  schedule:
+    - cron: "50 3 * * 1-5"   # 03:50 UTC = 9:20 AM IST, Monday to Friday
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+concurrency:
+  group: desk-test
+  cancel-in-progress: false
+
+jobs:
+  desk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 355          # GitHub's limit is 6 hours; the session ends by 3:17 PM
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: Run the desk through the session (paper only)
+        env:
+          PMD_DATA: docs/data
+        run: |
+          git config user.name "premarket-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          python desk_autopilot.py

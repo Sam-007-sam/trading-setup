@@ -91,3 +91,20 @@ acting on a ticket.
 
 Set `docs/data/config.json` to `{"infoOnly": true}` before showing the dashboard to anyone who
 pays for it. See SELLING.md.
+
+## Trade desk (in the Mac app)
+
+The **Trade desk** tab appears in the Mac app. Each morning it asks whether you want to trade,
+your capital, your maximum loss for the day, how many trades, futures or options, and three
+quiz questions. During market hours it suggests trades on Nifty and Bank Nifty with the
+backtested "ORB with trend filter" rule, sized so a stop-loss can't cost more than your
+per-trade limit. When you confirm, it enters, places the stop at once, moves it to break-even
+at +1R, books profit at +2R, squares off at 3:15 PM and locks the day at your loss limit.
+
+- Paper mode is the default (real prices, simulated fills).
+- Live mode needs `LIVE_TRADING=yes-i-accept-the-risk` and an Upstox token, and stays off
+  until the rule shows a profit factor above 1 over at least 200 tested trades.
+- Live order handling is untested against a real account.
+- `desk_autopilot.py` and `.github/workflows/desk-test.yml` run the desk in paper mode through
+  each live session on GitHub, confirming every suggestion, so it is tested on real market days.
+  Results: `docs/data/desk-test-futures/` and `docs/data/desk-test-options/`.

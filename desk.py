@@ -46,6 +46,21 @@ def charges_estimate(turnover: float, instrument: str) -> float:
     return 47 + 0.00013 * turnover           # turnover = buy + sell contract value
 
 
+MIN_TESTED_TRADES = 200
+
+
+def tested_record() -> dict:
+    """The desk rule's latest backtest (intraday.json), pooled over both indices."""
+    try:
+        r = json.loads((DATA / "intraday.json").read_text())
+        stats = [s["stats"] for m in r["markets"] for s in m["strategies"] if s["id"] == "orb_plus"]
+        trades = sum(x["trades"] for x in stats)
+        pf = min((x["profitFactor"] or 0) for x in stats) if stats else 0
+        return {"trades": trades, "profitFactor": pf, "ok": trades >= MIN_TESTED_TRADES and pf > 1}
+    except Exception:
+        return {"trades": 0, "profitFactor": None, "ok": False}
+
+
 def live_enabled() -> bool:
     import broker
     return os.environ.get("LIVE_TRADING") == broker.CONFIRM and bool(os.environ.get("UPSTOX_ACCESS_TOKEN"))
@@ -182,7 +197,8 @@ class UpstoxBroker:
 
 # ---------------------------------------------------------------- the desk
 class Desk:
-    def __init__(self, feed=None, clock=None, broker=None):
+    def __init__(self, feed=None, clock=None, broker=None, subdir="desk"):
+        self.subdir = subdir
         self.feed = feed or Feed()
         self.clock = clock or (lambda: dt.datetime.now(IST))
         self.broker = broker
@@ -191,7 +207,7 @@ class Desk:
 
     # ---- state
     def _path(self, day):
-        d = DATA / "desk"
+        d = DATA / self.subdir
         d.mkdir(parents=True, exist_ok=True)
         return d / f"{day.isoformat()}.json"
 
@@ -224,6 +240,13 @@ class Desk:
                 return {"error": "Today's session already has trades; limits can't be changed mid-day."}
             s["answers"] = answers
             s["profile"] = R.evaluate(answers, live_enabled())
+            rec = tested_record()
+            if s["profile"].get("mode") == "live" and not rec["ok"]:
+                s["profile"]["mode"] = "paper"
+                s["profile"]["notes"].append(
+                    f"Live trading stays off: the rule hasn't shown a positive record in testing yet "
+                    f"(needs a profit factor above 1 over at least {MIN_TESTED_TRADES} trades; latest: "
+                    f"{rec['profitFactor']} over {rec['trades']} trades).")
             self.log("Session started: " + (f"{s['profile']['mode']} mode, max loss ₹{s['profile']['maxLoss']:,}, "
                                             f"{s['profile']['maxTrades']} trade(s), {s['profile']['instrument']}"
                                             if s["profile"]["allowed"] else s["profile"]["reason"]))
