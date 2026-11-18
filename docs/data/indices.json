@@ -116,6 +116,91 @@
    }
   ],
   "monthPct": 9.68,
+  "tech": {
+   "asOf": "2026-11-17",
+   "close": 25387.4,
+   "rows": [
+    {
+     "name": "20-day EMA",
+     "value": 24231.43,
+     "reading": "Price 4.8% above",
+     "signal": "bull"
+    },
+    {
+     "name": "50-day EMA",
+     "value": 23750.66,
+     "reading": "Price 6.9% above",
+     "signal": "bull"
+    },
+    {
+     "name": "200-day EMA",
+     "value": 23988.55,
+     "reading": "Price 5.8% above",
+     "signal": "bull"
+    },
+    {
+     "name": "50 vs 200 EMA",
+     "value": null,
+     "reading": "50-day below 200-day (long-term downtrend)",
+     "signal": "bear"
+    },
+    {
+     "name": "RSI (14)",
+     "value": 78.1,
+     "reading": "Overbought: strong, but stretched (rising)",
+     "signal": "neutral"
+    },
+    {
+     "name": "MACD (12, 26, 9)",
+     "value": 192.88,
+     "reading": "MACD above signal line, histogram shrinking.",
+     "signal": "bull"
+    },
+    {
+     "name": "Supertrend (10, 3)",
+     "value": 24443.97,
+     "reading": "Uptrend; trailing level 24,444",
+     "signal": "bull"
+    },
+    {
+     "name": "Bollinger band (20, 2)",
+     "value": "21,688 to 26,050",
+     "reading": "Price at 85% of the band; band width 18.3%",
+     "signal": "neutral"
+    },
+    {
+     "name": "ATR (14)",
+     "value": 310.84,
+     "reading": "Average daily range about 1.22% (311 points)",
+     "signal": "neutral"
+    },
+    {
+     "name": "52-week range",
+     "value": "22,180 to 26,373",
+     "reading": "3.7% below the high, 14.5% above the low",
+     "signal": "neutral"
+    }
+   ],
+   "score": 0.67,
+   "verdict": "Strong uptrend",
+   "bull": 5,
+   "bear": 1,
+   "pivots": {
+    "P": 25385.35,
+    "R1": 25503.4,
+    "S1": 25269.35,
+    "R2": 25619.4,
+    "S2": 25151.3,
+    "R3": 25737.45,
+    "S3": 25035.3,
+    "cprTop": 25386.38,
+    "cprBottom": 25384.33,
+    "cprWidthPct": 0.01
+   },
+   "atr": 310.84,
+   "hi52": 26373.2,
+   "lo52": 22179.9
+  },
   "note": "Source: Yahoo Finance (^NSEI). 1-month change vs the close a month earlier."
  },
  {
@@ -235,6 +320,91 @@
    }
   ],
   "monthPct": 11.51,
+  "tech": {
+   "asOf": "2026-11-17",
+   "close": 62273.25,
+   "rows": [
+    {
+     "name": "20-day EMA",
+     "value": 58226.87,
+     "reading": "Price 6.9% above",
+     "signal": "bull"
+    },
+    {
+     "name": "50-day EMA",
+     "value": 56989.07,
+     "reading": "Price 9.3% above",
+     "signal": "bull"
+    },
+    {
+     "name": "200-day EMA",
+     "value": 56585.97,
+     "reading": "Price 10.1% above",
+     "signal": "bull"
+    },
+    {
+     "name": "50 vs 200 EMA",
+     "value": null,
+     "reading": "50-day above 200-day (long-term uptrend)",
+     "signal": "bull"
+    },
+    {
+     "name": "RSI (14)",
+     "value": 80.1,
+     "reading": "Overbought: strong, but stretched (rising)",
+     "signal": "neutral"
+    },
+    {
+     "name": "MACD (12, 26, 9)",
+     "value": 707.67,
+     "reading": "MACD above signal line, histogram shrinking.",
+     "signal": "bull"
+    },
+    {
+     "name": "Supertrend (10, 3)",
+     "value": 59189.87,
+     "reading": "Uptrend; trailing level 59,190",
+     "signal": "bull"
+    },
+    {
+     "name": "Bollinger band (20, 2)",
+     "value": "51,264 to 62,949",
+     "reading": "Price at 94% of the band; band width 20.5%",
+     "signal": "neutral"
+    },
+    {
+     "name": "ATR (14)",
+     "value": 886.85,
+     "reading": "Average daily range about 1.42% (887 points)",
+     "signal": "neutral"
+    },
+    {
+     "name": "52-week range",
+     "value": "49,955 to 62,442",
+     "reading": "0.3% below the high, 24.7% above the low",
+     "signal": "neutral"
+    }
+   ],
+   "score": 0.89,
+   "verdict": "Strong uptrend",
+   "bull": 6,
+   "bear": 0,
+   "pivots": {
+    "P": 62067.82,
+    "R1": 62647.63,
+    "S1": 61693.43,
+    "R2": 63022.02,
+    "S2": 61113.62,
+    "R3": 63601.83,
+    "S3": 60739.23,
+    "cprTop": 62170.53,
+    "cprBottom": 61965.1,
+    "cprWidthPct": 0.33
+   },
+   "atr": 886.85,
+   "hi52": 62442.2,
+   "lo52": 49954.85
+  },
   "note": "Source: Yahoo Finance (^NSEBANK). 1-month change vs the close a month earlier."
  },
  {
@@ -354,20 +524,296 @@
    }
   ],
   "monthPct": 11.06,
+  "tech": {
+   "asOf": "2026-11-17",
+   "close": 28195.0,
+   "rows": [
+    {
+     "name": "20-day EMA",
+     "value": 26474.08,
+     "reading": "Price 6.5% above",
+     "signal": "bull"
+    },
+    {
+     "name": "50-day EMA",
+     "value": 25888.88,
+     "reading": "Price 8.9% above",
+     "signal": "bull"
+    },
+    {
+     "name": "200-day EMA",
+     "value": 25998.03,
+     "reading": "Price 8.5% above",
+     "signal": "bull"
+    },
+    {
+     "name": "50 vs 200 EMA",
+     "value": null,
+     "reading": "50-day below 200-day (long-term downtrend)",
+     "signal": "bear"
+    },
+    {
+     "name": "RSI (14)",
+     "value": 78.9,
+     "reading": "Overbought: strong, but stretched (rising)",
+     "signal": "neutral"
+    },
+    {
+     "name": "MACD (12, 26, 9)",
+     "value": 314.68,
+     "reading": "MACD above signal line, histogram shrinking.",
+     "signal": "bull"
+    },
+    {
+     "name": "Supertrend (10, 3)",
+     "value": 26896.94,
+     "reading": "Uptrend; trailing level 26,897",
+     "signal": "bull"
+    },
+    {
+     "name": "Bollinger band (20, 2)",
+     "value": "22,976 to 28,847",
+     "reading": "Price at 89% of the band; band width 22.7%",
+     "signal": "neutral"
+    },
+    {
+     "name": "ATR (14)",
+     "value": 415.54,
+     "reading": "Average daily range about 1.47% (416 points)",
+     "signal": "neutral"
+    },
+    {
+     "name": "52-week range",
+     "value": "23,374 to 28,562",
+     "reading": "1.3% below the high, 20.6% above the low",
+     "signal": "neutral"
+    }
+   ],
+   "score": 0.67,
+   "verdict": "Strong uptrend",
+   "bull": 5,
+   "bear": 1,
+   "pivots": {
+    "P": 28180.23,
+    "R1": 28365.72,
+    "S1": 28009.52,
+    "R2": 28536.43,
+    "S2": 27824.03,
+    "R3": 28721.92,
+    "S3": 27653.32,
+    "cprTop": 28187.62,
+    "cprBottom": 28172.85,
+    "cprWidthPct": 0.05
+   },
+   "atr": 415.54,
+   "hi52": 28562.5,
+   "lo52": 23373.95
+  },
   "note": "Source: Yahoo Finance (NIFTY_FIN_SERVICE.NS). 1-month change vs the close a month earlier."
  },
  {
   "id": "midcap",
   "order": 4,
-  "name": "Nifty Midcap 100",
-  "short": "Midcap",
+  "name": "Nifty Midcap 50",
+  "short": "Midcap 50",
   "kind": "index",
-  "last": 59914.2,
-  "lastDate": "2026-09-28",
-  "dayPct": -1.63,
-  "monthPct": -6.49,
-  "series": [],
-  "note": "Shown as Nifty Midcap 100. The traded derivative (Nifty Midcap Select) wasn't available from a reliable source today. Midcaps have underperformed large caps through September. (Not refreshed this morning.)"
+  "last": 17821.3008,
+  "lastDate": "2026-11-17",
+  "dayPct": 0.27,
+  "series": [
+   {
+    "d": "2026-10-16",
+    "c": 16946.3008,
+    "p": -0.06
+   },
+   {
+    "d": "2026-10-19",
+    "c": 16767.8496,
+    "p": -1.05
+   },
+   {
+    "d": "2026-10-21",
+    "c": 16500.1992,
+    "p": -1.6
+   },
+   {
+    "d": "2026-10-22",
+    "c": 16410.8008,
+    "p": -0.54
+   },
+   {
+    "d": "2026-10-23",
+    "c": 16066.4004,
+    "p": -2.1
+   },
+   {
+    "d": "2026-10-26",
+    "c": 16266.8496,
+    "p": 1.25
+   },
+   {
+    "d": "2026-10-27",
+    "c": 16412.6992,
+    "p": 0.9
+   },
+   {
+    "d": "2026-10-28",
+    "c": 16500.6504,
+    "p": 0.54
+   },
+   {
+    "d": "2026-10-29",
+    "c": 16656.4004,
+    "p": 0.94
+   },
+   {
+    "d": "2026-10-30",
+    "c": 16513.3008,
+    "p": -0.86
+   },
+   {
+    "d": "2026-11-02",
+    "c": 16717.6992,
+    "p": 1.24
+   },
+   {
+    "d": "2026-11-03",
+    "c": 16908.3008,
+    "p": 1.14
+   },
+   {
+    "d": "2026-11-04",
+    "c": 17149.0996,
+    "p": 1.42
+   },
+   {
+    "d": "2026-11-05",
+    "c": 17432.4004,
+    "p": 1.65
+   },
+   {
+    "d": "2026-11-06",
+    "c": 17490.0,
+    "p": 0.33
+   },
+   {
+    "d": "2026-11-09",
+    "c": 17589.5,
+    "p": 0.57
+   },
+   {
+    "d": "2026-11-11",
+    "c": 17753.5996,
+    "p": 0.93
+   },
+   {
+    "d": "2026-11-12",
+    "c": 17884.9492,
+    "p": 0.74
+   },
+   {
+    "d": "2026-11-13",
+    "c": 17877.4492,
+    "p": -0.04
+   },
+   {
+    "d": "2026-11-16",
+    "c": 17774.1504,
+    "p": -0.58
+   },
+   {
+    "d": "2026-11-17",
+    "c": 17821.3008,
+    "p": 0.27
+   }
+  ],
+  "monthPct": 5.16,
+  "tech": {
+   "asOf": "2026-11-17",
+   "close": 17821.3,
+   "rows": [
+    {
+     "name": "20-day EMA",
+     "value": 17312.04,
+     "reading": "Price 2.9% above",
+     "signal": "bull"
+    },
+    {
+     "name": "50-day EMA",
+     "value": 17313.85,
+     "reading": "Price 2.9% above",
+     "signal": "bull"
+    },
+    {
+     "name": "200-day EMA",
+     "value": 17250.79,
+     "reading": "Price 3.3% above",
+     "signal": "bull"
+    },
+    {
+     "name": "50 vs 200 EMA",
+     "value": null,
+     "reading": "50-day above 200-day (long-term uptrend)",
+     "signal": "bull"
+    },
+    {
+     "name": "RSI (14)",
+     "value": 65.8,
+     "reading": "Bullish momentum (rising)",
+     "signal": "bull"
+    },
+    {
+     "name": "MACD (12, 26, 9)",
+     "value": 140.72,
+     "reading": "MACD above signal line, histogram shrinking.",
+     "signal": "bull"
+    },
+    {
+     "name": "Supertrend (10, 3)",
+     "value": 17114.99,
+     "reading": "Uptrend; trailing level 17,115",
+     "signal": "bull"
+    },
+    {
+     "name": "Bollinger band (20, 2)",
+     "value": "15,818 to 18,231",
+     "reading": "Price at 83% of the band; band width 14.2%",
+     "signal": "neutral"
+    },
+    {
+     "name": "ATR (14)",
+     "value": 245.19,
+     "reading": "Average daily range about 1.38% (245 points)",
+     "signal": "neutral"
+    },
+    {
+     "name": "52-week range",
+     "value": "14,805 to 18,501",
+     "reading": "3.7% below the high, 20.4% above the low",
+     "signal": "neutral"
+    }
+   ],
+   "score": 1.0,
+   "verdict": "Strong uptrend",
+   "bull": 7,
+   "bear": 0,
+   "pivots": {
+    "P": 17807.25,
+    "R1": 17903.5,
+    "S1": 17725.05,
+    "R2": 17985.7,
+    "S2": 17628.8,
+    "R3": 18081.95,
+    "S3": 17546.6,
+    "cprTop": 17814.28,
+    "cprBottom": 17800.22,
+    "cprWidthPct": 0.08
+   },
+   "atr": 245.19,
+   "hi52": 18500.95,
+   "lo52": 14804.55
+  },
+  "note": "Source: Yahoo Finance (^NSEMDCP50). 1-month change vs the close a month earlier."
  },
  {
   "id": "sensex",
@@ -486,6 +932,91 @@
    }
   ],
   "monthPct": 10.44,
+  "tech": {
+   "asOf": "2026-11-17",
+   "close": 82532.19,
+   "rows": [
+    {
+     "name": "20-day EMA",
+     "value": 78383.48,
+     "reading": "Price 5.3% above",
+     "signal": "bull"
+    },
+    {
+     "name": "50-day EMA",
+     "value": 76524.59,
+     "reading": "Price 7.9% above",
+     "signal": "bull"
+    },
+    {
+     "name": "200-day EMA",
+     "value": 77241.09,
+     "reading": "Price 6.9% above",
+     "signal": "bull"
+    },
+    {
+     "name": "50 vs 200 EMA",
+     "value": null,
+     "reading": "50-day below 200-day (long-term downtrend)",
+     "signal": "bear"
+    },
+    {
+     "name": "RSI (14)",
+     "value": 80.8,
+     "reading": "Overbought: strong, but stretched (rising)",
+     "signal": "neutral"
+    },
+    {
+     "name": "MACD (12, 26, 9)",
+     "value": 644.94,
+     "reading": "MACD above signal line, histogram shrinking.",
+     "signal": "bull"
+    },
+    {
+     "name": "Supertrend (10, 3)",
+     "value": 79423.45,
+     "reading": "Uptrend; trailing level 79,423",
+     "signal": "bull"
+    },
+    {
+     "name": "Bollinger band (20, 2)",
+     "value": "69,918 to 84,520",
+     "reading": "Price at 86% of the band; band width 18.9%",
+     "signal": "neutral"
+    },
+    {
+     "name": "ATR (14)",
+     "value": 1013.38,
+     "reading": "Average daily range about 1.23% (1,013 points)",
+     "signal": "neutral"
+    },
+    {
+     "name": "52-week range",
+     "value": "71,293 to 86,159",
+     "reading": "4.2% below the high, 15.8% above the low",
+     "signal": "neutral"
+    }
+   ],
+   "score": 0.67,
+   "verdict": "Strong uptrend",
+   "bull": 5,
+   "bear": 1,
+   "pivots": {
+    "P": 82507.19,
+    "R1": 82922.49,
+    "S1": 82116.89,
+    "R2": 83312.79,
+    "S2": 81701.6,
+    "R3": 83728.08,
+    "S3": 81311.3,
+    "cprTop": 82519.69,
+    "cprBottom": 82494.7,
+    "cprWidthPct": 0.03
+   },
+   "atr": 1013.38,
+   "hi52": 86159.02,
+   "lo52": 71292.88
+  },
   "note": "Source: Yahoo Finance (^BSESN). 1-month change vs the close a month earlier."
  },
  {
@@ -605,6 +1136,35 @@
    }
   ],
   "monthPct": 10.38,
+  "tech": {
+   "asOf": "2026-11-17",
+   "close": 15.52,
+   "rows": [
+    {
+     "name": "20-day average",
+     "value": 16.05,
+     "reading": "VIX is below its 20-day average",
+     "signal": "neutral"
+    },
+    {
+     "name": "RSI (14)",
+     "value": 50.3,
+     "reading": "Normal range",
+     "signal": "neutral"
+    },
+    {
+     "name": "Bollinger band (20, 2)",
+     "value": "14.38 to 17.72",
+     "reading": "Inside the bands",
+     "signal": "neutral"
+    }
+   ],
+   "score": 0,
+   "verdict": "Volatility gauge",
+   "atr": 1.88,
+   "hi52": 28.91,
+   "lo52": 8.86
+  },
   "note": "Source: Yahoo Finance (^INDIAVIX). 1-month change vs the close a month earlier."
  }
 ]
