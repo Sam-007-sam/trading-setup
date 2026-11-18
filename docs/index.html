@@ -59,8 +59,8 @@ h3{font-size:15px;margin:0 0 8px;font-weight:600}
 .gauge-labels{display:flex;justify-content:space-between;font-size:12px;color:var(--muted)}
 
 /* stat strip */
-.stats{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:10px;overflow:hidden}
-.stat{background:var(--panel);padding:12px 14px}
+.stats{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:0;background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.stat{background:var(--panel);padding:12px 14px;box-shadow:1px 0 0 var(--line),0 1px 0 var(--line)}
 .stat .l{font-size:13px;color:var(--muted)}
 .stat .v{font-size:19px;font-weight:700;margin-top:2px}
 .stat .c{font-size:13px;font-weight:600}
@@ -244,7 +244,13 @@ function renderBrief(b, list){
   const events = (b.events||[]).map(e=>`<li>${esc(e)}</li>`).join("");
   const f = b.flows||{};
 
-  $("#brief").innerHTML = `
+  $("#brief").innerHTML = (INFO ? `
+  <section class="panel">
+    <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:baseline">
+      <h2 style="margin:0">Overnight summary</h2>${picker}
+    </div>
+    <p style="margin:10px 0 0">${esc(b.bias?.summary||"")}</p>
+  </section>` : `
   <section class="panel bias">
     <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:baseline">
       <div class="verdict">${esc(b.bias?.label||"")}</div>${picker}
@@ -254,7 +260,7 @@ function renderBrief(b, list){
       <div class="gauge-labels"><span>Bearish</span><span>Neutral</span><span>Bullish</span></div>
     </div>
     <p>${esc(b.bias?.summary||"")}</p>
-  </section>
+  </section>`) + `
 
   <section class="stats">${stats}</section>
 
@@ -268,10 +274,10 @@ function renderBrief(b, list){
       <h2>How India closed yesterday</h2>
       <p style="margin:0 0 12px">${esc(b.india?.recap||"")}</p>
       <div class="bars">${bars}</div>
-      <div class="grid2" style="margin-top:14px;gap:12px">
+      ${(b.india?.gainers||[]).length||(b.india?.losers||[]).length?`<div class="grid2" style="margin-top:14px;gap:12px">
         <div><h3>Top Nifty gainers</h3><table><tbody>${mover(b.india?.gainers)}</tbody></table></div>
         <div><h3>Top Nifty losers</h3><table><tbody>${mover(b.india?.losers)}</tbody></table></div>
-      </div>
+      </div>`:""}
     </section>
   </div>
 
@@ -285,14 +291,14 @@ function renderBrief(b, list){
       </tbody></table>
       ${f.note?`<div class="note">${esc(f.note)}</div>`:""}
     </section>
-    <section class="panel">
+    ${INFO ? "" : `<section class="panel">
       <h2>Nifty levels in focus</h2>
       <div class="levels">
         <div class="lv r"><div class="t">Resistance</div><div class="x">${(lv.resistance||[]).map(x=>fmt(x,0)).join(" / ")}</div></div>
         <div class="lv s"><div class="t">Support</div><div class="x">${(lv.support||[]).map(x=>fmt(x,0)).join(" / ")}</div></div>
       </div>
       ${lv.note?`<div class="note">${esc(lv.note)}</div>`:""}
-    </section>
+    </section>`}
   </div>
 
   ${optionsPanel(b.options)}
@@ -408,13 +414,13 @@ function renderTech(){
       ${v?`<div class="ct">RSI ${esc((x.rows.find(r=>r.name==="RSI (14)")||{}).value??"—")}</div>`:
       `<div class="meter" aria-hidden="true"><i style="width:${(x.bull||0)/tot*100}%;background:var(--up)"></i><i style="width:${(x.bear||0)/tot*100}%;background:var(--down)"></i></div>
       <div class="ct">${x.bull||0} bullish · ${x.bear||0} bearish signals</div>`}</button>`;}).join("");
-  const rows=t.rows.map(r=>`<tr><td><b>${esc(r.name)}</b></td><td class="num">${r.value==null?"—":typeof r.value==="number"?fmt(r.value,Math.abs(r.value)<1000?2:0):esc(r.value)}</td><td>${esc(r.reading)}</td><td class="num">${isVol?"":`<span class="sig ${esc(r.signal)}">${r.signal==="bull"?"Bullish":r.signal==="bear"?"Bearish":"Neutral"}</span>`}</td></tr>`).join("");
+  const rows=t.rows.map(r=>`<tr><td><b>${esc(r.name)}</b></td><td class="num">${r.value==null?"—":typeof r.value==="number"?fmt(r.value,Math.abs(r.value)<1000?2:0):esc(r.value)}</td><td>${esc(r.reading)}</td><td class="num">${isVol||INFO?"":`<span class="sig ${esc(r.signal)}">${r.signal==="bull"?"Bullish":r.signal==="bear"?"Bearish":"Neutral"}</span>`}</td></tr>`).join("");
   let ladder="";
   if(t.pivots){
     const p=t.pivots, c=t.close;
     const lv=[["R3",p.R3,"r"],["R2",p.R2,"r"],["R1",p.R1,"r"],["CPR top",p.cprTop,"p"],["Pivot",p.P,"p"],["CPR bottom",p.cprBottom,"p"],["S1",p.S1,"s"],["S2",p.S2,"s"],["S3",p.S3,"s"],["Last close",c,"now"]];
     lv.sort((a,b)=>b[1]-a[1]);
-    ladder=`<section class="panel"><h2>Levels for the next session</h2>
+    ladder=`<section class="panel"><h2>${INFO?"Pivot levels (calculated)":"Levels for the next session"}</h2>
       <div class="ladder">${lv.map(([n,v,k])=>`<div class="rung ${k}"><span>${esc(n)}</span><b>${fmt(v,0)}</b><span class="dist">${k==="now"?"":pct((v/c-1)*100)}</span></div>`).join("")}</div>
       <div class="note">Classic floor pivots and the Central Pivot Range (CPR) from the last session's high, low and close. A narrow CPR (this one is ${fmt(p.cprWidthPct,2)}% wide) often comes before a trending day; a wide one before a sideways day. A typical day here moves about ${fmt(t.atr,0)} points (ATR).</div></section>`;
   }
@@ -422,7 +428,7 @@ function renderTech(){
     <div class="grid2">
       <section class="panel"><h2>${esc(ix.name)}: ${esc(t.verdict)}</h2>
         <div class="muted" style="font-size:13px;margin-bottom:8px">Daily chart, as of the ${esc(dLong(t.asOf))} close (${fmt(t.close)}).${isVol?" For VIX these are fear-level readings, not buy or sell signals.":""}</div>
-        <div class="scroll"><table><thead><tr><th>Indicator</th><th class="num">Value</th><th>Reading</th><th class="num">${isVol?"":"Signal"}</th></tr></thead><tbody>${rows}</tbody></table></div>
+        <div class="scroll"><table><thead><tr><th>Indicator</th><th class="num">Value</th><th>Reading</th><th class="num">${isVol||INFO?"":"Signal"}</th></tr></thead><tbody>${rows}</tbody></table></div>
         <div class="note">The verdict weighs the 200-day average and Supertrend double. Indicators describe what price has already done; they lag and often disagree. Use them alongside levels and risk limits, not as orders.</div>
       </section>
       ${ladder||`<section class="panel"><h2>How to read VIX</h2><p style="margin:0">India VIX is the market's expected volatility over the next 30 days. Below about 12 is calm, 12 to 18 normal, above 20 nervous. A rising VIX usually means wider intraday swings and pricier options.</p></section>`}
@@ -431,7 +437,7 @@ function renderTech(){
 }
 
 /* ---------- backtest ---------- */
-let WF=null, wfF="any";
+let WF=null, wfF="any", INFO=false;
 let BT=null, ID=null, PAPER=null, btM=null, btS=null, btMode="daily", idS=null;
 function eqChart(a, b){
   const W=720,H=240,P={l:52,r:12,t:12,b:26};
@@ -491,7 +497,7 @@ function renderBT(){
   <section class="panel">
     <h2>${esc(st.name)}</h2>
     <p style="margin:0 0 6px">${esc(st.desc)}</p>
-    <p style="margin:0 0 10px"><b>${esc(verdict)}</b> ${pct(x.cagrPct,1)} a year versus ${pct(bh.cagrPct,1)} for buy-and-hold; worst fall ${num(x.maxDdPct,1,"%")} versus ${num(bh.maxDdPct,1,"%")}. ${x.trades} trades, ${num(x.winRatePct,0,"%")} winners; average win ${pct(x.avgWinPct)}, average loss ${pct(x.avgLossPct)}.${x.openPosition?` Currently <b>${x.openPosition>0?"long":"short"}</b>.`:" Currently flat."}</p>
+    <p style="margin:0 0 10px"><b>${esc(verdict)}</b> ${pct(x.cagrPct,1)} a year versus ${pct(bh.cagrPct,1)} for buy-and-hold; worst fall ${num(x.maxDdPct,1,"%")} versus ${num(bh.maxDdPct,1,"%")}. ${x.trades} trades, ${num(x.winRatePct,0,"%")} winners; average win ${pct(x.avgWinPct)}, average loss ${pct(x.avgLossPct)}.${INFO?"":x.openPosition?` Currently <b>${x.openPosition>0?"long":"short"}</b>.`:" Currently flat."}</p>
     <div class="lgd"><span><i style="background:var(--sun)"></i>Strategy</span><span><i style="background:var(--muted)"></i>Buy and hold</span></div>
     ${eqChart(st.curve, m.buyHold.curve)}
     <h3 style="margin-top:14px">Most recent trades</h3>
@@ -669,6 +675,7 @@ const staticSource = () => {
     async intraday(){ try{ return await get("data/intraday.json"); }catch(e){ return null; } },
     async paper(){ try{ return await get("data/paper.json"); }catch(e){ return null; } },
     async walkforward(){ try{ return await get("data/walkforward.json"); }catch(e){ return null; } },
+    async config(){ try{ return await get("data/config.json"); }catch(e){ return {}; } },
     editable:false
   };
 };
@@ -679,6 +686,10 @@ async function loadBrief(id, list){
 const noData = msg => { $("#window").textContent=msg; $("#brief").innerHTML=`<div class="panel empty">${esc(msg)}</div>`; renderTrends(); };
 async function loadAll(){
   try{
+    const cfg = SRC.config ? await SRC.config() : {};
+    INFO = !!(cfg && cfg.infoOnly);
+    const pt = document.querySelector('[data-tab="paper"]'); if (pt) pt.hidden = INFO;
+    if (INFO && !$("#paper").hidden) document.querySelector('[data-tab="brief"]').click();
     const [ids, idx, wl] = await Promise.all([SRC.briefList(), SRC.indices(), SRC.watch()]);
     INDICES=idx; WATCH=wl; renderTrends(); renderTech();
     const opt = async f => { try{ return SRC[f] ? await SRC[f]() : null; }catch(e){ return null; } };

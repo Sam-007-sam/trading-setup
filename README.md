@@ -68,3 +68,26 @@ python -m http.server -d docs 8000                  # open http://localhost:8000
 - The model name is set by the `ANTHROPIC_MODEL` environment variable (default in `fetch.py`).
 
 Information only, not investment advice.
+
+## Connecting Upstox (optional, for your own account)
+
+`broker.py` checks your Upstox account and turns a paper strategy's next move into a futures
+order ticket. It never sends an order unless you add `--live`, set
+`LIVE_TRADING=yes-i-accept-the-risk`, and type that phrase for each order. It has not yet been
+tested against a live account.
+
+1. Create an app at https://account.upstox.com/developer/apps (one active app per user).
+2. Register your static IP on the app. Since 1 April 2026, API orders must come from it, so live
+   orders cannot run from GitHub Actions; run `broker.py` on a machine with that IP.
+3. Get the day's access token through the app's login flow and export it:
+   `export UPSTOX_ACCESS_TOKEN=...`
+4. `python broker.py check` to confirm the connection, then
+   `python broker.py ticket nifty50 ema_cross` for a dry-run ticket.
+
+The paper ledger tracks its own fake position, not your real one; check `broker.py check` before
+acting on a ticket.
+
+## Information-only mode
+
+Set `docs/data/config.json` to `{"infoOnly": true}` before showing the dashboard to anyone who
+pays for it. See SELLING.md.

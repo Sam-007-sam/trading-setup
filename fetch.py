@@ -68,6 +68,11 @@ GLOBAL = [
     ("Commodities & FX",   "Bitcoin ($)",        "BTC-USD",   0),
 ]
 
+# NSE sector indices on Yahoo Finance, for the sector bar chart when no AI summary is available.
+SECTORS = [("IT", "^CNXIT"), ("Pharma", "^CNXPHARMA"), ("FMCG", "^CNXFMCG"), ("Auto", "^CNXAUTO"),
+           ("Metal", "^CNXMETAL"), ("Bank", "^NSEBANK"), ("Energy", "^CNXENERGY"), ("Realty", "^CNXREALTY"),
+           ("PSU Bank", "^CNXPSUBANK"), ("Financial Svcs", "NIFTY_FIN_SERVICE.NS")]
+
 # Headline feeds used when no Anthropic API key is set. Replace with any feeds you prefer.
 RSS_FEEDS = [
     ("Economic Times Markets", "https://economictimes.indiatimes.com/markets/rssfeeds/1977021501.cms"),
@@ -83,7 +88,15 @@ NSE_HEADERS = {
     "Accept-Language": "en-US,en;q=0.9",
 }
 
-PROBLEMS: list[str] = []   # collected into the brief so the page shows what failed
+PROBLEMS: list[str] = []
+
+
+def info_only() -> bool:
+    """Information-only mode (docs/data/config.json {"infoOnly": true}): no calls, verdicts or levels."""
+    try:
+        return bool(json.loads((DATA / "config.json").read_text()).get("infoOnly"))
+    except Exception:
+        return False   # collected into the brief so the page shows what failed
 
 
 # ---------------------------------------------------------------- pure helpers (unit-testable)
@@ -216,6 +229,32 @@ def fetch_indices(today: dt.date, now: dt.datetime) -> list[dict]:
     return out
 
 
+def fetch_sectors(today: dt.date, now: dt.datetime) -> list[dict]:
+    out = []
+    for name, ticker in SECTORS:
+        try:
+            closes = [(d, c) for d, c in yf_closes(ticker, period="7d")]
+            if closes and closes[-1][0] == today.isoformat() and (now.hour, now.minute) < (15, 40):
+                closes = closes[:-1]
+            out.append({"name": name, "chg": round((closes[-1][1] / closes[-2][1] - 1) * 100, 2)})
+        except Exception as e:
+            PROBLEMS.append(f"sector {name}: {e}")
+    return sorted(out, key=lambda x: x["chg"], reverse=True)
+
+
+def fact_recap(ix: dict, sectors: list[dict]) -> str:
+    n, bn = ix.get("nifty50", {}), ix.get("banknifty", {})
+    if not n.get("last"):
+        return ""
+    s = (f"Nifty 50 closed at {n['last']:,.2f} ({n.get('dayPct', 0):+.2f}%) on {n.get('lastDate')}, "
+         f"and Bank Nifty at {bn.get('last', 0):,.2f} ({bn.get('dayPct', 0):+.2f}%).")
+    if sectors:
+        up = sum(1 for x in sectors if x["chg"] > 0)
+        s += (f" {up} of {len(sectors)} sector indices rose; {sectors[0]['name']} led ({sectors[0]['chg']:+.2f}%) "
+              f"and {sectors[-1]['name']} lagged ({sectors[-1]['chg']:+.2f}%).")
+    return s
+
+
 def fetch_global() -> list[dict]:
     rows = []
     for group, name, ticker, dec in GLOBAL:
@@ -331,6 +370,14 @@ Reply with ONLY a JSON object, no markdown fences, with exactly these keys:
  "events":["..."],
  "sources":[{{"name":"","url":""}}]}}
 Keep 6-10 news items and 6-10 stocks in focus. Paraphrase; never copy article text. Use null where unknown."""
+    if info_only():
+        prompt += """
+
+INFORMATION-ONLY MODE: this brief is published to subscribers who are not clients of a SEBI-registered
+adviser. Report facts and what happened only. Do NOT give buy/sell/hold views, targets, stop-losses,
+expected direction, opening bias or "likely" moves, and do not describe stocks as opportunities.
+Set bias.score to 0 and bias.label to "Overnight summary"; bias.summary is a factual recap.
+Set levels to null. In "watch", say only what the news was, never what to do about it."""
     body = {
         "model": ANTHROPIC_MODEL,
         "max_tokens": 8000,
@@ -370,6 +417,7 @@ def main() -> int:
     indices = fetch_indices(today, now)
     (DATA / "indices.json").write_text(json.dumps(indices, indent=1))
     glob = fetch_global()
+    sectors = fetch_sectors(today, now)
 
     options, flows = {}, None
     try:
@@ -443,13 +491,17 @@ def main() -> int:
         "windowLabel": (f"{today:%a %d %b %Y}, refreshed {now:%I:%M %p} IST. Includes today's close"
                         if (now.hour, now.minute) >= (15, 40) else
                         f"{today:%a %d %b %Y}, refreshed {now:%I:%M %p} IST. Covers the previous close to now"),
-        "bias": (llm or {}).get("bias") or rule_based_bias(glob),
+        "bias": ({"score": 0, "label": "Overnight summary",
+                  "summary": ((llm or {}).get("bias") or {}).get("summary")
+                             or rule_based_bias(glob)["summary"].split(" Add an Anthropic")[0].replace("Rule-based read: r", "R")}
+                 if info_only() else (llm or {}).get("bias") or rule_based_bias(glob)),
         "keyStats": key_stats,
         "global": [{k: x[k] for k in ("group", "name", "value", "chg")} for x in glob],
         "globalNote": "Asia levels are early-morning readings and keep moving until their close.",
-        "india": (llm or {}).get("india") or {"recap": "", "sectors": [], "gainers": [], "losers": []},
+        "india": (llm or {}).get("india") or {"recap": fact_recap(ix, sectors), "sectors": sectors,
+                                              "gainers": [], "losers": []},
         "flows": fl,
-        "levels": (llm or {}).get("levels") or pivot_levels(n.get("tech")),
+        "levels": {} if info_only() else (llm or {}).get("levels") or pivot_levels(n.get("tech")),
         "options": ({"asOf": f"{now:%I:%M %p} IST, {today:%d %b}", **options} if options else None),
         "news": (llm or {}).get("news") or fetch_rss(),
         "watch": (llm or {}).get("watch") or [],
