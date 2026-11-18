@@ -74,7 +74,11 @@ def main() -> int:
     try:
         started = json.loads(path.read_text())["started"]
     except Exception:
-        started = now.date().isoformat()   # first run: paper trading starts from the next session
+        # First run: start from the next session that hasn't opened yet, so no fill is decided after the fact.
+        first = now.date() if (now.hour, now.minute) < (9, 15) else now.date() + dt.timedelta(days=1)
+        while first.weekday() >= 5:
+            first += dt.timedelta(days=1)
+        started = first.isoformat()
         log.info("starting paper trading on %s", started)
     result = {"started": started, "capital": CAPITAL, "generated": now.isoformat(timespec="minutes"),
               "costPct": B.COST_PCT, "cashRatePct": B.CASH_RATE_PCT, "markets": []}
