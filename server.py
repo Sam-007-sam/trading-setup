@@ -53,8 +53,10 @@ def run_refresh() -> None:
             if not os.path.exists(bt) or time.time() - os.path.getmtime(bt) > 20 * 3600:
                 import backtest
                 import intraday
+                import walkforward
                 backtest.main()
                 intraday.main()
+                walkforward.main()
         except Exception:
             traceback.print_exc()
         try:   # paper ledger is cheap; refresh every time

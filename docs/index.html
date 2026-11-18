@@ -431,6 +431,7 @@ function renderTech(){
 }
 
 /* ---------- backtest ---------- */
+let WF=null, wfF="any";
 let BT=null, ID=null, PAPER=null, btM=null, btS=null, btMode="daily", idS=null;
 function eqChart(a, b){
   const W=720,H=240,P={l:52,r:12,t:12,b:26};
@@ -453,9 +454,11 @@ function renderBT(){
   const box=$("#bt");
   const modes = `<div class="chips" role="group" aria-label="Timeframe" style="margin-bottom:8px">
     <button class="chip" data-mode="daily" aria-pressed="${btMode==="daily"}">Daily (5 years)</button>
-    <button class="chip" data-mode="intraday" aria-pressed="${btMode==="intraday"}">Intraday (15-minute)</button></div>`;
+    <button class="chip" data-mode="intraday" aria-pressed="${btMode==="intraday"}">Intraday (15-minute)</button>
+    <button class="chip" data-mode="wf" aria-pressed="${btMode==="wf"}">Walk-forward (tuned on past, tested on future)</button></div>`;
   const bindModes = () => box.querySelectorAll("[data-mode]").forEach(b=>b.onclick=()=>{btMode=b.dataset.mode;renderBT();});
   if(btMode==="intraday"){ box.innerHTML = modes + intradayHTML(); bindModes(); bindIntraday(box); return; }
+  if(btMode==="wf"){ box.innerHTML = modes + wfHTML(); bindModes(); bindWF(box); return; }
   if(!BT || !(BT.markets||[]).length){ box.innerHTML=modes+`<div class="panel empty">Backtest results appear after the next data refresh.</div>`; bindModes(); return; }
   if(!btM || !BT.markets.some(m=>m.id===btM)) btM=BT.markets[0].id;
   const m=BT.markets.find(x=>x.id===btM);
@@ -529,6 +532,41 @@ function intradayHTML(){
     <div class="scroll"><table><thead><tr><th>Day</th><th>Side</th><th>Time</th><th class="num">Entry</th><th class="num">Exit</th><th>Exit reason</th><th class="num">Result</th></tr></thead><tbody>${tr||`<tr><td colspan="7" class="muted">No trades.</td></tr>`}</tbody></table></div>
     <div class="note">Index levels are used directly, so futures basis and real fills will differ. Index data has no volume, so the VWAP line here is the session's running average price.</div>
   </section>`;
+}
+function wfHTML(){
+  if(!WF || !(WF.markets||[]).length) return `<div class="panel empty">Walk-forward results appear after the next data refresh.</div>`;
+  if(!btM || !WF.markets.some(m=>m.id===btM)) btM=WF.markets[0].id;
+  const m=WF.markets.find(x=>x.id===btM);
+  if(!m.families.some(f=>f.id===wfF)) wfF=m.families[0].id;
+  const fam=m.families.find(f=>f.id===wfF), bh=m.buyHold.stats, cash=m.cash.stats;
+  const num=(v,d=2)=>v==null?"—":Number(v).toFixed(d);
+  const rows=m.families.map(f=>{const x=f.stats; return `<tr class="pick" data-wf="${esc(f.id)}" tabindex="0" aria-selected="${f.id===wfF}">
+    <td>${esc(f.name)}</td><td class="num ${cls(x.cagrPct-cash.cagrPct)}">${pct(x.cagrPct,1)}</td><td class="num down">${num(x.maxDdPct,1)}%</td>
+    <td class="num">${num(f.avgTrainSharpe)}</td><td class="num ${cls(x.sharpe)}">${num(x.sharpe)}</td><td class="num">${f.cashYears} of ${m.folds.length}</td></tr>`}).join("")
+    + `<tr class="bh"><td>Buy and hold (no costs)</td><td class="num">${pct(bh.cagrPct,1)}</td><td class="num">${num(bh.maxDdPct,1)}%</td><td class="num">—</td><td class="num">${num(bh.sharpe)}</td><td class="num">—</td></tr>
+       <tr class="bh"><td>Liquid fund only</td><td class="num">${pct(cash.cagrPct,1)}</td><td class="num">0.0%</td><td class="num">—</td><td class="num">—</td><td class="num">all</td></tr>`;
+  const folds=m.folds.map(f=>{const p=f.picks[wfF]; return `<tr><td>${esc(dLabel(f.train[0]))} ${esc(f.train[0].slice(0,4))} – ${esc(f.train[1].slice(0,4))}</td><td>${esc(dLabel(f.test[0]))} ${esc(f.test[0].slice(0,4))} – ${esc(dLabel(f.test[1]))} ${esc(f.test[1].slice(0,4))}</td>
+    <td>${esc(p.setting)}</td><td class="num">${num(p.trainSharpe)}</td><td class="num ${cls(p.testSharpe)}">${num(p.testSharpe)}</td><td class="num ${cls(p.testReturnPct)}">${pct(p.testReturnPct,1)}</td></tr>`}).join("");
+  const decay = fam.avgTrainSharpe - (fam.stats.sharpe||0);
+  return `<div class="chips" role="group" aria-label="Choose index">${WF.markets.map(mm=>`<button class="chip" aria-pressed="${mm.id===btM}" data-m="${esc(mm.id)}">${esc(mm.name)}</button>`).join("")}</div>
+  <section class="panel">
+    <h2>${esc(m.name)}: tuned settings on unseen years, ${esc(dLong(m.from))} to ${esc(dLong(m.to))}</h2>
+    <div class="muted" style="font-size:13px;margin-bottom:8px">Each year, the best setting is chosen on the previous ${m.trainYears} years only (several periods and thresholds, with and without a calm-market filter), then traded for the next year it has never seen. If nothing beat cash in training, the rule holds cash that year. Same costs and fills as the daily backtest. Sharpe is above the ${WF.cashRatePct}% cash rate.</div>
+    <div class="scroll"><table class="btsum"><thead><tr><th>Strategy family</th><th class="num">Yearly return (unseen)</th><th class="num">Worst fall</th><th class="num">Sharpe in training</th><th class="num">Sharpe on unseen years</th><th class="num">Years in cash</th></tr></thead><tbody>${rows}</tbody></table></div>
+  </section>
+  <section class="panel">
+    <h2>${esc(fam.name)}</h2>
+    <p style="margin:0 0 10px">Settings looked like a Sharpe of <b>${num(fam.avgTrainSharpe)}</b> on the years they were chosen on, and delivered <b>${num(fam.stats.sharpe)}</b> on the years after. ${decay>0.3?"That drop is the cost of fitting to the past: most of the edge seen in training did not carry forward.":decay>0?"Some of the training edge was lost going forward.":"The edge held up out of sample."}</p>
+    <div class="lgd"><span><i style="background:var(--sun)"></i>Tuned strategy, unseen years</span><span><i style="background:var(--muted)"></i>Buy and hold</span></div>
+    ${eqChart(fam.curve, m.buyHold.curve)}
+    <h3 style="margin-top:14px">Year by year</h3>
+    <div class="scroll"><table><thead><tr><th>Trained on</th><th>Tested on</th><th>Setting chosen</th><th class="num">Training Sharpe</th><th class="num">Test Sharpe</th><th class="num">Test return</th></tr></thead><tbody>${folds}</tbody></table></div>
+    <div class="note">Index prices exclude dividends, which understates buy and hold and long positions against cash by about 1 to 1.5% a year. Each test year starts flat, so a position across a year boundary pays costs twice.</div>
+  </section>`;
+}
+function bindWF(box){
+  box.querySelectorAll("[data-m]").forEach(b=>b.onclick=()=>{btM=b.dataset.m;renderBT();});
+  box.querySelectorAll("tr[data-wf]").forEach(r=>{const go=()=>{wfF=r.dataset.wf;renderBT();}; r.onclick=go; r.onkeydown=e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();go();}};});
 }
 function bindIntraday(box){
   box.querySelectorAll("[data-m]").forEach(b=>b.onclick=()=>{btM=b.dataset.m;renderBT();});
@@ -630,6 +668,7 @@ const staticSource = () => {
     async backtest(){ try{ return await get("data/backtest.json"); }catch(e){ return null; } },
     async intraday(){ try{ return await get("data/intraday.json"); }catch(e){ return null; } },
     async paper(){ try{ return await get("data/paper.json"); }catch(e){ return null; } },
+    async walkforward(){ try{ return await get("data/walkforward.json"); }catch(e){ return null; } },
     editable:false
   };
 };
@@ -643,7 +682,7 @@ async function loadAll(){
     const [ids, idx, wl] = await Promise.all([SRC.briefList(), SRC.indices(), SRC.watch()]);
     INDICES=idx; WATCH=wl; renderTrends(); renderTech();
     const opt = async f => { try{ return SRC[f] ? await SRC[f]() : null; }catch(e){ return null; } };
-    [BT, ID, PAPER] = await Promise.all([opt("backtest"), opt("intraday"), opt("paper")]);
+    [BT, ID, PAPER, WF] = await Promise.all([opt("backtest"), opt("intraday"), opt("paper"), opt("walkforward")]);
     renderBT(); renderPaper();
     if (!ids.length) return noData("No brief yet. Run the morning update to create one.");
     await loadBrief(ids[0], ids.map(id=>({id})));
