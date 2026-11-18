@@ -48,6 +48,13 @@ def run_refresh() -> None:
         import fetch
         importlib.reload(fetch)          # picks up a fresh PROBLEMS list each run
         fetch.main()
+        try:   # backtest once a day; it needs several years of data
+            bt = os.path.join(os.environ.get("PMD_DATA", ""), "backtest.json")
+            if not os.path.exists(bt) or time.time() - os.path.getmtime(bt) > 20 * 3600:
+                import backtest
+                backtest.main()
+        except Exception:
+            traceback.print_exc()
         STATE.update(status="done", finished=now_iso(), problems=list(fetch.PROBLEMS))
     except Exception as e:
         traceback.print_exc()
