@@ -1,9 +1,12 @@
 # Intraday rule research
 
-512 variants of the opening-range breakout. Chosen on data up to 2024-12-31, tested once on later data. Costs 0.012% per side. A rule must be profitable (profit factor > 1) on both Nifty and Bank Nifty.
+552 variants: opening-range breakouts (round 1), gap fades and failed-breakout fades (round 2). Chosen on data up to 2024-12-31, tested once on later data. Costs 0.012% per side. A rule must be profitable (profit factor > 1) on both Nifty and Bank Nifty.
 
 - nifty50: 2022-01-04 to 2026-11-17, 739 training and 464 test sessions
 - banknifty: 2022-01-04 to 2026-11-17, 739 training and 464 test sessions
+- orb: 512 variants, 0 profitable on both indices in the test period
+- gapfade: 24 variants, 0 profitable on both indices in the test period
+- rangefade: 16 variants, 0 profitable on both indices in the test period
 
 Share of ALL variants profitable on both indices: training 4%, test 0%.
 
