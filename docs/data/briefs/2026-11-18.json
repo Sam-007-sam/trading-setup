@@ -1,0 +1,252 @@
+{
+ "date": "2026-11-18",
+ "windowLabel": "Wed 18 Nov 2026, refreshed 01:09 PM IST. Covers the previous close to now",
+ "bias": {
+  "score": -0.04,
+  "label": "Neutral",
+  "summary": "Rule-based read: risk assets moved -0.07% on average overnight and Brent moved -1.74%. Add an Anthropic API key for a written analysis with news."
+ },
+ "keyStats": [
+  {
+   "label": "GIFT Nifty (pre-open)",
+   "value": "—",
+   "dir": "flat"
+  },
+  {
+   "label": "Nifty 50 close",
+   "value": "25,387.40",
+   "change": "+0.38%",
+   "dir": "up"
+  },
+  {
+   "label": "Bank Nifty close",
+   "value": "62,273.25",
+   "change": "+1.13%",
+   "dir": "up"
+  },
+  {
+   "label": "India VIX",
+   "value": "15.52",
+   "change": "-1.02%",
+   "dir": "up"
+  },
+  {
+   "label": "FII net (17-Nov-2026)",
+   "value": "₹4,195 cr",
+   "change": "DII ₹+197 cr",
+   "dir": "up"
+  },
+  {
+   "label": "USD/INR",
+   "value": "93.49",
+   "change": "-0.51%",
+   "dir": "up"
+  },
+  {
+   "label": "Brent crude",
+   "value": "91.52",
+   "change": "-1.74%",
+   "dir": "up"
+  },
+  {
+   "label": "US 10Y yield",
+   "value": "5.103",
+   "change": "-0.35%",
+   "dir": "up"
+  }
+ ],
+ "global": [
+  {
+   "group": "US (last close)",
+   "name": "Dow Jones",
+   "value": "50,759.42",
+   "chg": -1.64
+  },
+  {
+   "group": "US (last close)",
+   "name": "S&P 500",
+   "value": "7,340.53",
+   "chg": -1.03
+  },
+  {
+   "group": "US (last close)",
+   "name": "Nasdaq Composite",
+   "value": "24,328.38",
+   "chg": -0.74
+  },
+  {
+   "group": "US (last close)",
+   "name": "CBOE VIX",
+   "value": "25.46",
+   "chg": 11.13
+  },
+  {
+   "group": "Asia (this morning)",
+   "name": "Nikkei 225",
+   "value": "59,024",
+   "chg": 0.28
+  },
+  {
+   "group": "Asia (this morning)",
+   "name": "Hang Seng",
+   "value": "23,305",
+   "chg": -0.87
+  },
+  {
+   "group": "Asia (this morning)",
+   "name": "Kospi",
+   "value": "5,067",
+   "chg": 1.99
+  },
+  {
+   "group": "Asia (this morning)",
+   "name": "Shanghai",
+   "value": "3,588",
+   "chg": 0.09
+  },
+  {
+   "group": "Asia (this morning)",
+   "name": "ASX 200",
+   "value": "8,822",
+   "chg": -0.69
+  },
+  {
+   "group": "Europe (last close)",
+   "name": "DAX",
+   "value": "26,045.37",
+   "chg": -2.08
+  },
+  {
+   "group": "Europe (last close)",
+   "name": "FTSE 100",
+   "value": "10,689.90",
+   "chg": -1.76
+  },
+  {
+   "group": "Commodities & FX",
+   "name": "Brent crude ($/bbl)",
+   "value": "91.52",
+   "chg": -1.74
+  },
+  {
+   "group": "Commodities & FX",
+   "name": "WTI crude ($/bbl)",
+   "value": "83.85",
+   "chg": -2.51
+  },
+  {
+   "group": "Commodities & FX",
+   "name": "Gold ($/oz)",
+   "value": "3,774",
+   "chg": -2.35
+  },
+  {
+   "group": "Commodities & FX",
+   "name": "US dollar index",
+   "value": "103.70",
+   "chg": 0.2
+  },
+  {
+   "group": "Commodities & FX",
+   "name": "USD/INR",
+   "value": "93.49",
+   "chg": -0.51
+  },
+  {
+   "group": "Commodities & FX",
+   "name": "US 10Y yield (%)",
+   "value": "5.103",
+   "chg": -0.35
+  },
+  {
+   "group": "Commodities & FX",
+   "name": "Bitcoin ($)",
+   "value": "64,444",
+   "chg": -0.69
+  }
+ ],
+ "globalNote": "Asia levels are early-morning readings and keep moving until their close.",
+ "india": {
+  "recap": "",
+  "sectors": [],
+  "gainers": [],
+  "losers": []
+ },
+ "flows": {
+  "dii": 196.93,
+  "fii": 4195.38,
+  "date": "17-Nov-2026"
+ },
+ "levels": {},
+ "options": null,
+ "news": [
+  {
+   "cat": "Economic Times Markets",
+   "impact": "neu",
+   "title": "Govt weighs tax tweaks to boost stock trading, curb derivatives",
+   "body": "The government is reviewing proposals to cut securities transaction tax on cash equities by 50% while raising levies on derivatives to curb speculative trading and encourage broader market participation. Officials are al"
+  },
+  {
+   "cat": "Economic Times Markets",
+   "impact": "neu",
+   "title": "How Ashish Kacholia, Radhakishan Damani, Madhusudan Kela and other ace investors reshuffled their portfolios in Q2",
+   "body": "Mukul Agrawal, Akash Bhanshali and Ashish Kacholia emerge as the biggest portfolio gainers among prominent individual investors in the September quarter. Meanwhile, Radhakishan Damani records the steepest decline. The an"
+  },
+  {
+   "cat": "Economic Times Markets",
+   "impact": "neu",
+   "title": "16 microcap stocks surge up to 390% in CY26, emerge as multibaggers",
+   "body": "The Nifty Microcap 250 has outperformed the benchmark Nifty 50 in CY26, with several constituents delivering multibagger returns. Sixteen microcap stocks have more than doubled investors' wealth so far this year, led by "
+  },
+  {
+   "cat": "Economic Times Markets",
+   "impact": "neu",
+   "title": "India bonds rise tracking easing crude oil, US Treasury yields",
+   "body": "The Indian bond market is experiencing a positive shift, with bond yields decreasing as oil prices and Treasury yields fall. The 2036 benchmark bond yield is now at 7.2393%, reflecting a minor drop. Additionally, crude o"
+  },
+  {
+   "cat": "Economic Times Markets",
+   "impact": "neu",
+   "title": "Anthropic IPO: Why Wall Street is betting big on Claude AI maker",
+   "body": "Anthropic is preparing for a blockbuster IPO that could value the Claude AI maker at up to $1.6 trillion. Strong investor demand, strategic stakes held by Amazon and Google, and bullish analyst forecasts are driving inte"
+  },
+  {
+   "cat": "Moneycontrol Market Reports",
+   "impact": "neu",
+   "title": "Taking Stock: Market fails to hold on to day#39;s gains, ends marginally higher",
+   "body": " Grasim Industries, Bharti Airtel, Nestle India, Maruti Suzuki and HCL Technologies were the biggest Nifty gainers, while losers included Sun Pharma, BPCL, Reliance Industries, MM and Hindalco Industries"
+  },
+  {
+   "cat": "Moneycontrol Market Reports",
+   "impact": "neu",
+   "title": "Sensex, Nifty gain for third day in a row; easing volatility to support bull trend",
+   "body": " Analysts expect the market to maintain the bullish undertone as elections and corporate earnings season continue"
+  },
+  {
+   "cat": "Moneycontrol Market Reports",
+   "impact": "neu",
+   "title": "Mid-day Mood | Cooling volatility sparks market rally, India VIX sees steepest fall in 4 years",
+   "body": " Broader markets outperformed benchmarks, with the BSE Midcap and BSE Smallcap rising up to 0.9 percent"
+  },
+  {
+   "cat": "Moneycontrol Market Reports",
+   "impact": "neu",
+   "title": "Sensex, Nifty extend gains to 3rd day, Q4 results to guide stock-specific action",
+   "body": " India VIX, which measures near-term volatility saw a sharp fall of 18 percent to trade around 10.42"
+  }
+ ],
+ "watch": [],
+ "watchNotes": {},
+ "events": [],
+ "sources": [
+  {
+   "name": "Yahoo Finance",
+   "url": "https://finance.yahoo.com"
+  },
+  {
+   "name": "NSE India",
+   "url": "https://www.nseindia.com"
+  }
+ ],
+ "compiledNote": "Generated automatically at 01:09 PM IST. Not refreshed: Nifty Midcap Select: not enough history; NSE option chain NIFTY: 404 Client Error: Not Found for url: https://www.nseindia.in/api/option-chain-indices?symbol=NIFTY; NSE option chain BANKNIFTY: 404 Client Error: Not Found for url: https://www.nseindia.in/api/option-chain-indices?symbol=BANKNIFTY."
+}
