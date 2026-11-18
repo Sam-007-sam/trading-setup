@@ -6,6 +6,7 @@ Rules (applied identically to every strategy):
     No look-ahead: a strategy only ever sees bars up to and including the signal bar.
   * One position at a time, fully invested (1x, no leverage), long or short.
   * COST_PCT is charged on every entry and every exit (brokerage, STT, slippage).
+  * While flat, money earns CASH_RATE_PCT a year (a liquid fund), accrued by calendar days.
   * Results are per index, not a portfolio.
 
 Writes docs/data/backtest.json for the dashboard's Backtest tab.
@@ -29,6 +30,7 @@ ROOT = pathlib.Path(__file__).resolve().parent
 DATA = pathlib.Path(os.environ.get("PMD_DATA") or (ROOT / "docs" / "data"))
 YEARS = 5
 COST_PCT = 0.05          # per side, in percent
+CASH_RATE_PCT = 6.5      # yearly return on idle cash (liquid fund), earned on days the strategy is flat
 WARMUP = 220             # bars needed before the first trade (200-day EMA + buffer)
 
 MARKETS = [("nifty50", "Nifty 50", "^NSEI"), ("banknifty", "Nifty Bank", "^NSEBANK")]
@@ -89,11 +91,13 @@ STRATEGIES = [
 
 
 # ---------------------------------------------------------------- engine
-def run(bars: list[dict], target: list[int], start: int, cost_pct: float = COST_PCT) -> dict:
+def run(bars: list[dict], target: list[int], start: int, cost_pct: float = COST_PCT,
+        cash_rate_pct: float = CASH_RATE_PCT) -> dict:
     """Simulate next-open execution. Returns equity curve, trades and stats."""
     cost = cost_pct / 100
     eq, pos, entry_px, entry_d, entry_eq = 1.0, 0, None, None, None
     curve, trades = [], []
+    days_in = 0
 
     def close_trade(px, d):
         nonlocal eq
@@ -117,19 +121,24 @@ def run(bars: list[dict], target: list[int], start: int, cost_pct: float = COST_
             if pos != 0:
                 eq *= 1 - cost
                 entry_px, entry_d, entry_eq = bar["o"], bar["d"], eq / (1 - cost)
-        # 3) open to close move on whatever we now hold
+        # 3) open to close move on whatever we now hold; idle cash earns interest
         if pos != 0:
             eq *= 1 + pos * (bar["c"] / bar["o"] - 1)
+            days_in += 1
+        elif cash_rate_pct:
+            gap = (dt.date.fromisoformat(bar["d"]) - dt.date.fromisoformat(bars[i - 1]["d"])).days
+            eq *= (1 + cash_rate_pct / 100) ** (gap / 365)
         curve.append((bar["d"], eq))
     if pos != 0:   # mark the open trade to the last close
         trades.append({"side": "long" if pos == 1 else "short", "entry": entry_d, "exit": None,
                        "entryPx": round(entry_px, 2), "exitPx": round(bars[-1]["c"], 2),
                        "pct": round((eq / entry_eq - 1) * 100, 2), "open": True,
                        "days": (dt.date.fromisoformat(bars[-1]["d"]) - dt.date.fromisoformat(entry_d)).days})
-    return {"curve": curve, "trades": trades, "stats": stats(curve, trades, pos)}
+    return {"curve": curve, "trades": trades,
+            "stats": stats(curve, trades, pos, days_in / max(1, len(bars) - start))}
 
 
-def stats(curve, trades, final_pos=0) -> dict:
+def stats(curve, trades, final_pos=0, exposure=None) -> dict:
     eqs = [e for _, e in curve]
     days = (dt.date.fromisoformat(curve[-1][0]) - dt.date.fromisoformat(curve[0][0])).days or 1
     total = eqs[-1] / 1.0 - 1
@@ -144,7 +153,7 @@ def stats(curve, trades, final_pos=0) -> dict:
     closed = [t for t in trades if not t.get("open")]
     wins = [t["pct"] for t in closed if t["pct"] > 0]
     losses = [t["pct"] for t in closed if t["pct"] <= 0]
-    in_mkt = sum(1 for i in range(1, len(eqs)) if eqs[i] != eqs[i - 1]) / max(1, len(eqs) - 1)
+    in_mkt = exposure if exposure is not None else 1.0
     return {
         "totalPct": round(total * 100, 1), "cagrPct": round(cagr * 100, 1), "maxDdPct": round(mdd * 100, 1),
         "sharpe": round(mean / sd * 252 ** 0.5, 2) if sd else None,
@@ -168,8 +177,10 @@ def thin(curve, n=260):
 def backtest_market(bars: list[dict]) -> dict:
     start = max(WARMUP, len(bars) - YEARS * 248)
     hold = run(bars, [1] * len(bars), start, cost_pct=0)   # buy and hold, no trading costs
+    cash = run(bars, [0] * len(bars), start)                 # liquid fund only
     out = {"from": bars[start]["d"], "to": bars[-1]["d"], "sessions": len(bars) - start,
-           "buyHold": {"stats": hold["stats"], "curve": thin(hold["curve"])}, "strategies": []}
+           "buyHold": {"stats": hold["stats"], "curve": thin(hold["curve"])},
+           "cash": {"stats": cash["stats"]}, "strategies": []}
     for sid, name, fn, short, desc in STRATEGIES:
         res = run(bars, fn(bars, short), start)
         out["strategies"].append({"id": sid, "name": name, "desc": desc, "stats": res["stats"],
@@ -180,7 +191,8 @@ def backtest_market(bars: list[dict]) -> dict:
 def main() -> int:
     import fetch   # reuse the Yahoo Finance loader
     now = dt.datetime.now(fetch.IST)
-    result = {"generated": now.isoformat(timespec="minutes"), "costPct": COST_PCT, "years": YEARS, "markets": []}
+    result = {"generated": now.isoformat(timespec="minutes"), "costPct": COST_PCT, "cashRatePct": CASH_RATE_PCT,
+              "years": YEARS, "markets": []}
     for mid, name, ticker in MARKETS:
         try:
             bars = fetch.completed_bars(fetch.yf_ohlc(ticker, period=f"{YEARS + 2}y"), now.date(), now)

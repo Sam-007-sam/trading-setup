@@ -9,6 +9,8 @@ Pages serves the dashboard.
 ## How it fits together
 
 - `backtest.py` tests simple strategies (Supertrend, EMA crossover, RSI pullback, 200-day trend filter) on 5 years of Nifty and Bank Nifty data, with next-day-open execution and 0.05% cost per side, and writes `docs/data/backtest.json` for the Backtest tab.
+- `intraday.py` backtests intraday rules (opening range breakout, VWAP cross, CPR open) on the last 60 days of 15-minute candles, squared off by 3:15 PM, and writes `docs/data/intraday.json`.
+- `paper.py` paper-trades the daily strategies with ₹10 lakh of fake money each, starting from its first run, and writes `docs/data/paper.json`. No real orders are placed.
 - `server.py` is the local server the Mac app uses to refresh data on launch.
 - `mac/` holds the Mac app bundle (`Pre-Market Desk.app`) and its install notes.
 

@@ -29,6 +29,10 @@ jobs:
         run: python fetch.py
       - name: Backtest strategies
         run: python backtest.py || echo "backtest failed; keeping the previous results"
+      - name: Intraday backtest
+        run: python intraday.py || echo "intraday backtest failed; keeping the previous results"
+      - name: Paper trading
+        run: python paper.py || echo "paper trading update failed; keeping the previous ledger"
       - name: Commit data
         run: |
           git config user.name "premarket-bot"

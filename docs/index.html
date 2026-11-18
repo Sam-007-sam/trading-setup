@@ -166,12 +166,14 @@ footer a{color:inherit}
     <button role="tab" aria-selected="false" data-tab="trends">Index trends</button>
     <button role="tab" aria-selected="false" data-tab="tech">Indicators</button>
     <button role="tab" aria-selected="false" data-tab="bt">Backtest</button>
+    <button role="tab" aria-selected="false" data-tab="paper">Paper trading</button>
   </nav>
 
   <main id="brief"></main>
   <main id="trends" hidden></main>
   <main id="tech" hidden></main>
   <main id="bt" hidden></main>
+  <main id="paper" hidden></main>
 
   <footer id="foot"></footer>
 </div>
@@ -207,6 +209,7 @@ document.querySelectorAll("nav.tabs button").forEach(b=>b.addEventListener("clic
   $("#trends").hidden = b.dataset.tab!=="trends";
   $("#tech").hidden = b.dataset.tab!=="tech";
   $("#bt").hidden = b.dataset.tab!=="bt";
+  $("#paper").hidden = b.dataset.tab!=="paper";
 }));
 
 /* ---------- brief render ---------- */
@@ -428,7 +431,7 @@ function renderTech(){
 }
 
 /* ---------- backtest ---------- */
-let BT=null, btM=null, btS=null;
+let BT=null, ID=null, PAPER=null, btM=null, btS=null, btMode="daily", idS=null;
 function eqChart(a, b){
   const W=720,H=240,P={l:52,r:12,t:12,b:26};
   const all=[...a,...b].map(x=>x[1]), lo=Math.min(...all), hi=Math.max(...all), pad=(hi-lo)*.06||.05;
@@ -448,15 +451,20 @@ function eqChart(a, b){
 }
 function renderBT(){
   const box=$("#bt");
-  if(!BT || !(BT.markets||[]).length){ box.innerHTML=`<div class="panel empty">Backtest results appear after the next data refresh.</div>`; return; }
+  const modes = `<div class="chips" role="group" aria-label="Timeframe" style="margin-bottom:8px">
+    <button class="chip" data-mode="daily" aria-pressed="${btMode==="daily"}">Daily (5 years)</button>
+    <button class="chip" data-mode="intraday" aria-pressed="${btMode==="intraday"}">Intraday (last 60 days)</button></div>`;
+  const bindModes = () => box.querySelectorAll("[data-mode]").forEach(b=>b.onclick=()=>{btMode=b.dataset.mode;renderBT();});
+  if(btMode==="intraday"){ box.innerHTML = modes + intradayHTML(); bindModes(); bindIntraday(box); return; }
+  if(!BT || !(BT.markets||[]).length){ box.innerHTML=modes+`<div class="panel empty">Backtest results appear after the next data refresh.</div>`; bindModes(); return; }
   if(!btM || !BT.markets.some(m=>m.id===btM)) btM=BT.markets[0].id;
   const m=BT.markets.find(x=>x.id===btM);
   if(!btS || !m.strategies.some(x=>x.id===btS)) btS=m.strategies[0].id;
   const st=m.strategies.find(x=>x.id===btS), bh=m.buyHold.stats;
   const num=(v,d=1,suf="")=>v==null?"—":Number(v).toFixed(d)+suf;
-  const row=(s,isBH)=>{const x=s.stats;
+  const row=(s,isBH,label)=>{const x=s.stats;
     return `<tr class="${isBH?"bh":"pick"}" ${isBH?"":`data-s="${esc(s.id)}" tabindex="0" aria-selected="${s.id===btS}"`}>
-    <td>${esc(isBH?"Buy and hold (no costs)":s.name)}</td>
+    <td>${esc(label||(isBH?"Buy and hold (no costs)":s.name))}</td>
     <td class="num ${cls(x.cagrPct)}">${pct(x.cagrPct,1)}</td><td class="num ${cls(x.totalPct)}">${pct(x.totalPct,0)}</td>
     <td class="num down">${num(x.maxDdPct,1,"%")}</td><td class="num">${num(x.sharpe,2)}</td>
     <td class="num">${isBH?"—":x.trades}</td><td class="num">${isBH?"—":num(x.winRatePct,0,"%")}</td>
@@ -469,13 +477,13 @@ function renderBT(){
   const x=st.stats;
   const trades=st.trades.map(t=>`<tr><td>${esc(t.side==="long"?"Long":"Short")}</td><td>${esc(dLong(t.entry))}</td><td>${t.exit?esc(dLong(t.exit)):`<span class="muted">Still open</span>`}</td>
     <td class="num">${fmt(t.entryPx,0)}</td><td class="num">${fmt(t.exitPx,0)}</td><td class="num">${t.days}d</td><td class="num"><span class="pill ${t.pct>0?"up":"down"} ${cls(t.pct)}">${pct(t.pct)}</span></td></tr>`).join("");
-  box.innerHTML=`
+  box.innerHTML=modes+`
   <div class="chips" role="group" aria-label="Choose index">${BT.markets.map(mm=>`<button class="chip" aria-pressed="${mm.id===btM}" data-m="${esc(mm.id)}">${esc(mm.name)}</button>`).join("")}</div>
   <section class="panel">
     <h2>${esc(m.name)}: ${esc(dLong(m.from))} to ${esc(dLong(m.to))}</h2>
-    <div class="muted" style="font-size:13px;margin-bottom:8px">${m.sessions} trading days. Signals on the daily close, trades at the next day's open, ${BT.costPct}% cost charged on every entry and exit. Click a strategy to see its chart and trades.</div>
+    <div class="muted" style="font-size:13px;margin-bottom:8px">${m.sessions} trading days. Signals on the daily close, trades at the next day's open, ${BT.costPct}% cost charged on every entry and exit${BT.cashRatePct?`, and idle money earns ${BT.cashRatePct}% a year as in a liquid fund`:""}. Click a strategy to see its chart and trades.</div>
     <div class="scroll"><table class="btsum"><thead><tr><th>Strategy</th><th class="num">Yearly return</th><th class="num">Total</th><th class="num">Worst fall</th><th class="num">Sharpe</th><th class="num">Trades</th><th class="num">Win rate</th><th class="num">Profit factor</th><th class="num">Time in market</th></tr></thead>
-    <tbody>${m.strategies.map(s=>row(s,false)).join("")}${row(m.buyHold,true)}</tbody></table></div>
+    <tbody>${m.strategies.map(s=>row(s,false)).join("")}${row(m.buyHold,true)}${m.cash?row({...m.cash,stats:{...m.cash.stats,exposurePct:0}},true,"Liquid fund only"):""}</tbody></table></div>
   </section>
   <section class="panel">
     <h2>${esc(st.name)}</h2>
@@ -487,8 +495,74 @@ function renderBT(){
     <div class="scroll"><table><thead><tr><th>Side</th><th>Entry</th><th>Exit</th><th class="num">Entry</th><th class="num">Exit</th><th class="num">Held</th><th class="num">Result</th></tr></thead><tbody>${trades||`<tr><td colspan="7" class="muted">No trades in this period.</td></tr>`}</tbody></table></div>
     <div class="note">Past results don't predict future ones. A backtest leaves out real-world frictions such as gaps through stops, partial fills and the temptation to override the rules. Index levels are used directly, so futures roll costs and premium/discount are not included. Win rate counts closed trades only.</div>
   </section>`;
+  bindModes();
   box.querySelectorAll("[data-m]").forEach(b=>b.onclick=()=>{btM=b.dataset.m;renderBT();});
   box.querySelectorAll("tr[data-s]").forEach(r=>{const go=()=>{btS=r.dataset.s;renderBT();}; r.onclick=go; r.onkeydown=e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();go();}};});
+}
+
+function intradayHTML(){
+  if(!ID || !(ID.markets||[]).length) return `<div class="panel empty">Intraday results appear after the next data refresh.</div>`;
+  if(!btM || !ID.markets.some(m=>m.id===btM)) btM=ID.markets[0].id;
+  const m=ID.markets.find(x=>x.id===btM);
+  if(!idS || !m.strategies.some(x=>x.id===idS)) idS=m.strategies[0].id;
+  const st=m.strategies.find(x=>x.id===idS), base=m.strategies.find(x=>x.baseline);
+  const num=(v,d=1,suf="")=>v==null?"—":Number(v).toFixed(d)+suf;
+  const rows=m.strategies.map(s=>{const x=s.stats; return `<tr class="${s.baseline?"bh":"pick"}" data-is="${esc(s.id)}" tabindex="0" aria-selected="${s.id===idS}">
+    <td>${esc(s.name)}</td><td class="num ${cls(x.totalPct)}">${pct(x.totalPct,2)}</td><td class="num down">${num(x.maxDdPct,2,"%")}</td>
+    <td class="num">${x.trades}</td><td class="num">${num(x.tradesPerDay,1)}</td><td class="num">${num(x.winRatePct,0,"%")}</td>
+    <td class="num">${pct(x.avgWinPct,2)} / ${pct(x.avgLossPct,2)}</td><td class="num">${num(x.profitFactor,2)}</td><td class="num">${x.stopsHit}</td></tr>`}).join("");
+  const x=st.stats;
+  const tr=st.trades.map(t=>`<tr><td>${esc(dLong(t.d))}</td><td>${esc(t.side==="long"?"Long":"Short")}</td><td>${esc(t.in)} → ${esc(t.out)}</td><td class="num">${fmt(t.entry,0)}</td><td class="num">${fmt(t.exit,0)}</td><td>${esc(t.why)}</td><td class="num"><span class="pill ${t.pct>0?"up":"down"} ${cls(t.pct)}">${pct(t.pct,2)}</span></td></tr>`).join("");
+  const curve = st.curve.length>1 && base ? eqChart(st.curve, base.curve) : "";
+  return `<div class="chips" role="group" aria-label="Choose index">${ID.markets.map(mm=>`<button class="chip" aria-pressed="${mm.id===btM}" data-m="${esc(mm.id)}">${esc(mm.name)}</button>`).join("")}</div>
+  <section class="panel">
+    <h2>${esc(m.name)} intraday: ${esc(dLong(m.from))} to ${esc(dLong(m.to))}</h2>
+    <div class="muted" style="font-size:13px;margin-bottom:8px">${m.sessions} sessions of 15-minute candles. Signals on a candle's close, filled at the next candle's open; stops fill at the stop price; everything squared off at 3:15 PM; ${ID.costPct}% cost per side. Only about 60 days of history is free, so treat these as a recent snapshot, not proof.</div>
+    <div class="scroll"><table class="btsum"><thead><tr><th>Strategy</th><th class="num">Total return</th><th class="num">Worst fall</th><th class="num">Trades</th><th class="num">Per day</th><th class="num">Win rate</th><th class="num">Avg win / loss</th><th class="num">Profit factor</th><th class="num">Stops hit</th></tr></thead><tbody>${rows}</tbody></table></div>
+  </section>
+  <section class="panel">
+    <h2>${esc(st.name)}</h2>
+    <p style="margin:0 0 10px">${esc(st.desc)}</p>
+    <p style="margin:0 0 10px"><b>${pct(x.totalPct,2)}</b> over the period after costs, against ${pct(base.stats.totalPct,2)} for simply buying every morning. ${x.winRatePct??"—"}% of trades won; stops were hit ${x.stopsHit} times out of ${x.trades}.</p>
+    ${curve?`<div class="lgd"><span><i style="background:var(--sun)"></i>Strategy</span><span><i style="background:var(--muted)"></i>Long 9:30 to 3:15 daily</span></div>${curve}`:""}
+    <h3 style="margin-top:14px">Most recent trades</h3>
+    <div class="scroll"><table><thead><tr><th>Day</th><th>Side</th><th>Time</th><th class="num">Entry</th><th class="num">Exit</th><th>Exit reason</th><th class="num">Result</th></tr></thead><tbody>${tr||`<tr><td colspan="7" class="muted">No trades.</td></tr>`}</tbody></table></div>
+    <div class="note">Index levels are used directly, so futures basis and real fills will differ. Index data has no volume, so the VWAP line here is the session's running average price.</div>
+  </section>`;
+}
+function bindIntraday(box){
+  box.querySelectorAll("[data-m]").forEach(b=>b.onclick=()=>{btM=b.dataset.m;renderBT();});
+  box.querySelectorAll("tr[data-is]").forEach(r=>{const go=()=>{idS=r.dataset.is;renderBT();}; r.onclick=go; r.onkeydown=e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();go();}};});
+}
+
+/* ---------- paper trading ---------- */
+let pM=null;
+const inr = n => n==null ? "—" : "₹"+Math.round(n).toLocaleString("en-IN");
+function renderPaper(){
+  const box=$("#paper");
+  if(!PAPER || !(PAPER.markets||[]).length){ box.innerHTML=`<div class="panel empty">Paper trading starts with the next data refresh.</div>`; return; }
+  if(!pM || !PAPER.markets.some(m=>m.id===pM)) pM=PAPER.markets[0].id;
+  const m=PAPER.markets.find(x=>x.id===pM);
+  const posTxt = p => p>0?`<span class="pill up up">Long</span>`:p<0?`<span class="pill down down">Short</span>`:`<span class="muted">Flat</span>`;
+  const actCls = a => /^Exit/.test(a)?"":/^Buy|to long/.test(a)?"up":/^Sell|to short/.test(a)?"down":"";
+  const rows=m.accounts.map(a=>`<tr><td><b>${esc(a.name)}</b><div class="muted" style="font-size:13px">${esc(a.desc)}</div></td>
+    <td class="num">${inr(a.equity)}</td><td class="num ${cls(a.pnl)}">${a.pnl>=0?"+":"−"}${inr(Math.abs(a.pnl)).slice(0)} <span style="font-size:12px">(${pct(a.pnlPct,2)})</span></td>
+    <td class="num">${posTxt(a.position)}${a.openTrade?`<div class="muted" style="font-size:12px">since ${esc(dLabel(a.openTrade.entry))} @ ${fmt(a.openTrade.entryPx,0)}, ${pct(a.openTrade.pct,2)}</div>`:""}</td>
+    <td class="num">${a.closedTrades}</td><td><b class="${actCls(a.next.action)}">${esc(a.next.action)}</b></td></tr>`).join("");
+  const allTrades=m.accounts.flatMap(a=>a.trades.map(t=>({...t,strat:a.name}))).sort((x,y)=>(y.exit||"").localeCompare(x.exit||"")).slice(0,15);
+  const tr=allTrades.map(t=>`<tr><td>${esc(t.strat)}</td><td>${esc(t.side==="long"?"Long":"Short")}</td><td>${esc(dLabel(t.entry))} → ${esc(dLabel(t.exit))}</td><td class="num">${fmt(t.entryPx,0)} → ${fmt(t.exitPx,0)}</td><td class="num"><span class="pill ${t.pct>0?"up":"down"} ${cls(t.pct)}">${pct(t.pct,2)}</span></td></tr>`).join("");
+  const days = m.accounts[0].curve.length;
+  box.innerHTML=`<div class="chips" role="group" aria-label="Choose index">${PAPER.markets.map(mm=>`<button class="chip" aria-pressed="${mm.id===pM}" data-p="${esc(mm.id)}">${esc(mm.name)}</button>`).join("")}</div>
+  <section class="panel">
+    <h2>${esc(m.name)}: fake money, real prices</h2>
+    <div class="muted" style="font-size:13px;margin-bottom:8px">Started ${esc(dLong(PAPER.started))} with ${inr(PAPER.capital)} per strategy. ${days?`${days} session${days>1?"s":""} so far.`:"The first trades fill at the next open."} Same rules as the backtest: signal on the close, fill at the next open, ${PAPER.costPct}% cost per side, idle cash earns ${PAPER.cashRatePct}% a year. No real orders are placed.</div>
+    <div class="scroll"><table><thead><tr><th>Strategy</th><th class="num">Value</th><th class="num">Profit / loss</th><th class="num">Position</th><th class="num">Closed trades</th><th>At the next open</th></tr></thead><tbody>${rows}</tbody></table></div>
+    <div class="note">"At the next open" is what each strategy would do based on the ${esc(dLong(m.lastDate))} close of ${fmt(m.lastClose,0)}. Give it at least a few months before drawing conclusions: a handful of trades says very little.</div>
+  </section>
+  <section class="panel"><h2>Closed paper trades</h2>
+    <div class="scroll"><table><thead><tr><th>Strategy</th><th>Side</th><th>Held</th><th class="num">Prices</th><th class="num">Result</th></tr></thead><tbody>${tr||`<tr><td colspan="5" class="muted">No closed trades yet.</td></tr>`}</tbody></table></div>
+  </section>`;
+  box.querySelectorAll("[data-p]").forEach(b=>b.onclick=()=>{pM=b.dataset.p;renderPaper();});
 }
 
 /* ---------- options snapshot ---------- */
@@ -554,6 +628,8 @@ const staticSource = () => {
     async watch(){ try{ return (await get("data/watchlist.json")).items||[]; }catch(e){ return []; } },
     async saveWatch(){ throw {code:"read_only"}; },
     async backtest(){ try{ return await get("data/backtest.json"); }catch(e){ return null; } },
+    async intraday(){ try{ return await get("data/intraday.json"); }catch(e){ return null; } },
+    async paper(){ try{ return await get("data/paper.json"); }catch(e){ return null; } },
     editable:false
   };
 };
@@ -566,8 +642,9 @@ async function loadAll(){
   try{
     const [ids, idx, wl] = await Promise.all([SRC.briefList(), SRC.indices(), SRC.watch()]);
     INDICES=idx; WATCH=wl; renderTrends(); renderTech();
-    try{ BT = SRC.backtest ? await SRC.backtest() : null; }catch(e){ BT=null; }
-    renderBT();
+    const opt = async f => { try{ return SRC[f] ? await SRC[f]() : null; }catch(e){ return null; } };
+    [BT, ID, PAPER] = await Promise.all([opt("backtest"), opt("intraday"), opt("paper")]);
+    renderBT(); renderPaper();
     if (!ids.length) return noData("No brief yet. Run the morning update to create one.");
     await loadBrief(ids[0], ids.map(id=>({id})));
   }catch(e){

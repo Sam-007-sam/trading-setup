@@ -52,7 +52,14 @@ def run_refresh() -> None:
             bt = os.path.join(os.environ.get("PMD_DATA", ""), "backtest.json")
             if not os.path.exists(bt) or time.time() - os.path.getmtime(bt) > 20 * 3600:
                 import backtest
+                import intraday
                 backtest.main()
+                intraday.main()
+        except Exception:
+            traceback.print_exc()
+        try:   # paper ledger is cheap; refresh every time
+            import paper
+            paper.main()
         except Exception:
             traceback.print_exc()
         STATE.update(status="done", finished=now_iso(), problems=list(fetch.PROBLEMS))
