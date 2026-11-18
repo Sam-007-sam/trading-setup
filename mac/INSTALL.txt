@@ -1,0 +1,29 @@
+PRE-MARKET DESK FOR MAC
+
+Install
+1. Drag "Pre-Market Desk.app" into your Applications folder.
+2. The first time only: right-click the app and choose Open, then click Open again.
+   (macOS asks this for apps that aren't from the App Store. If there's no Open button,
+   go to System Settings > Privacy & Security, scroll down and click "Open Anyway".)
+3. If macOS offers to install "Command Line Developer Tools", click Install, wait for it
+   to finish, then open the app again. This gives the app the Python it runs on.
+4. First launch takes about a minute while it downloads its data libraries.
+   After that it opens in a few seconds.
+
+Using it
+- Every time you open it, it fetches fresh data: global markets, index history,
+  NSE option chain and FII/DII flows, plus news if you added an API key.
+- "Refresh now" fetches again; "Quit app" stops it. Closing the window also stops it
+  after a few minutes.
+- The dashboard opens in an app-style window if you have Chrome, Edge or Brave;
+  otherwise in Safari.
+- Your watchlist and past briefs are saved in:
+  ~/Library/Application Support/Pre-Market Desk
+- The optional Anthropic API key is stored in your macOS Keychain under "Pre-Market Desk".
+  To change it, delete that Keychain item and the file ".key-asked" in the folder above,
+  then reopen the app.
+
+If something goes wrong, the log is at:
+~/Library/Application Support/Pre-Market Desk/app.log
+
+Information only, not investment advice.

@@ -1,0 +1,408 @@
+{
+ "date": "2026-09-29",
+ "windowLabel": "Tue 29 Sep 2026 brief. Covers Mon 28 Sep 3:30 PM to Tue 29 Sep 9:00 AM IST",
+ "bias": {
+  "score": -0.4,
+  "label": "Cautious, bearish tilt. Flat-to-soft open likely",
+  "summary": "Monday's broad sell-off (Nifty -1.56% to 22,780, its lowest close in about six months) came on rising crude, US yields at a 19-year high and heavy FPI selling. Overnight cues didn't help: Wall Street fell, Asia opened lower and Brent is near $107. GIFT Nifty was roughly flat to 22 points lower before 9 AM, so a gap-down looks unlikely, but the trend is down and it's September expiry day, so expect sharp intraday swings. 22,700 is the line to watch."
+ },
+ "keyStats": [
+  {
+   "label": "GIFT Nifty (pre-open)",
+   "value": "~22,815",
+   "change": "Flat to -22 pts",
+   "dir": "flat",
+   "note": "Implies a flat start"
+  },
+  {
+   "label": "Nifty 50 close",
+   "value": "22,780.25",
+   "change": "-1.56%",
+   "dir": "down"
+  },
+  {
+   "label": "Bank Nifty close",
+   "value": "54,471.65",
+   "change": "-1.99%",
+   "dir": "down"
+  },
+  {
+   "label": "India VIX",
+   "value": "13.69",
+   "change": "+12.54%",
+   "dir": "down",
+   "note": "Fear rising"
+  },
+  {
+   "label": "FII net (28 Sep)",
+   "value": "-₹5,353 cr",
+   "dir": "down",
+   "change": "DII +₹5,189 cr"
+  },
+  {
+   "label": "USD/INR",
+   "value": "95.98",
+   "change": "+0.18% (rupee weaker)",
+   "dir": "down"
+  },
+  {
+   "label": "Brent crude",
+   "value": "$106.9",
+   "change": "+1.65% in Asia",
+   "dir": "down",
+   "note": "Settled $105.28 Mon"
+  },
+  {
+   "label": "US 10Y yield",
+   "value": "5.24%",
+   "change": "Highest since 2007",
+   "dir": "down"
+  }
+ ],
+ "global": [
+  {
+   "group": "US (Mon close)",
+   "name": "Dow Jones",
+   "value": "51,481.51",
+   "chg": -0.67
+  },
+  {
+   "group": "US (Mon close)",
+   "name": "S&P 500",
+   "value": "7,683.69",
+   "chg": -0.77
+  },
+  {
+   "group": "US (Mon close)",
+   "name": "Nasdaq Composite",
+   "value": "26,820.38",
+   "chg": -0.92
+  },
+  {
+   "group": "US (Mon close)",
+   "name": "CBOE VIX",
+   "value": "16.07",
+   "chg": 8.07
+  },
+  {
+   "group": "US (Mon close)",
+   "name": "Dow futures (Tue AM)",
+   "value": "-61 pts",
+   "chg": null
+  },
+  {
+   "group": "Asia (Tue morning)",
+   "name": "Nikkei 225",
+   "value": "65,307",
+   "chg": -0.87
+  },
+  {
+   "group": "Asia (Tue morning)",
+   "name": "Hang Seng",
+   "value": "24,486",
+   "chg": -0.63
+  },
+  {
+   "group": "Asia (Tue morning)",
+   "name": "Kospi",
+   "value": "6,860",
+   "chg": -0.43
+  },
+  {
+   "group": "Asia (Tue morning)",
+   "name": "Shanghai",
+   "value": "3,817",
+   "chg": -0.18
+  },
+  {
+   "group": "Asia (Tue morning)",
+   "name": "ASX 200",
+   "value": "8,683",
+   "chg": 0.03
+  },
+  {
+   "group": "Europe (Mon close)",
+   "name": "DAX",
+   "value": "25,374.42",
+   "chg": -0.13
+  },
+  {
+   "group": "Europe (Mon close)",
+   "name": "FTSE 100",
+   "value": "10,684.88",
+   "chg": -0.1
+  },
+  {
+   "group": "Commodities & FX",
+   "name": "Brent crude ($/bbl)",
+   "value": "106.9",
+   "chg": 1.65
+  },
+  {
+   "group": "Commodities & FX",
+   "name": "WTI crude ($/bbl)",
+   "value": "93.9",
+   "chg": 1.4
+  },
+  {
+   "group": "Commodities & FX",
+   "name": "Gold ($/oz)",
+   "value": "4,166",
+   "chg": -0.06
+  },
+  {
+   "group": "Commodities & FX",
+   "name": "US dollar index",
+   "value": "~101",
+   "chg": 0.2
+  },
+  {
+   "group": "Commodities & FX",
+   "name": "Bitcoin ($)",
+   "value": "82,930",
+   "chg": -0.58
+  }
+ ],
+ "globalNote": "Asia levels are early-morning readings (around 7:40 AM IST) and moved during the session. Gold fell 3.2% on Monday before steadying.",
+ "india": {
+  "recap": "Every sector closed red and only 3 of 50 Nifty stocks rose. Across the Nifty 500, decliners beat advancers 424 to 76. Sensex fell 1,124 points to 72,771.72, and BSE market cap shrank by about ₹8.88 lakh crore. Midcaps (-1.63%) and smallcaps (-1.85%) fell more than the Nifty. The index closed near the day's low with a big bearish candle.",
+  "sectors": [
+   {
+    "name": "IT",
+    "chg": -0.26
+   },
+   {
+    "name": "Pharma",
+    "chg": -0.89
+   },
+   {
+    "name": "FMCG",
+    "chg": -1.47
+   },
+   {
+    "name": "Auto",
+    "chg": -1.64
+   },
+   {
+    "name": "Financial Svcs",
+    "chg": -1.69
+   },
+   {
+    "name": "Metal",
+    "chg": -1.78
+   },
+   {
+    "name": "Bank",
+    "chg": -1.99
+   },
+   {
+    "name": "Energy",
+    "chg": -2.0
+   },
+   {
+    "name": "Realty",
+    "chg": -2.12
+   },
+   {
+    "name": "PSU Bank",
+    "chg": -3.24
+   }
+  ],
+  "gainers": [
+   {
+    "name": "Dr Reddy's",
+    "chg": 1.67
+   },
+   {
+    "name": "Infosys",
+    "chg": 0.3
+   },
+   {
+    "name": "HDFC Life",
+    "chg": 0.11
+   }
+  ],
+  "losers": [
+   {
+    "name": "Tata Motors PV",
+    "chg": -3.0
+   },
+   {
+    "name": "Adani Enterprises",
+    "chg": -2.93
+   },
+   {
+    "name": "Jio Financial",
+    "chg": -2.86
+   },
+   {
+    "name": "Power Grid",
+    "chg": -2.84
+   },
+   {
+    "name": "L&T",
+    "chg": -2.83
+   }
+  ]
+ },
+ "flows": {
+  "date": "28 Sep",
+  "fii": -5353.22,
+  "dii": 5189.02,
+  "fiiMtd": -29255.58,
+  "note": "FPIs have sold about ₹29,256 cr in September after buying ₹17,366 cr in August. DIIs are absorbing almost all of the selling, which is cushioning, not reversing, the fall. Provisional data."
+ },
+ "levels": {
+  "support": [
+   22700,
+   22500
+  ],
+  "resistance": [
+   22800,
+   22950,
+   23200
+  ],
+  "note": "Analysts see the downtrend intact while Nifty stays below about 22,950. A decisive break of 22,700 opens 22,500; the 52-week low is 22,182.55. Holding above 22,800 could bring 23,000 to 23,200 into play. Expiry-day moves can overshoot these levels."
+ },
+ "news": [
+  {
+   "cat": "Global and macro",
+   "impact": "neg",
+   "title": "US–Iran standoff keeps oil elevated",
+   "body": "Trump rejected an Iranian proposal tied to reopening the Strait of Hormuz and said the US would win the conflict soon. Brent rose for a second day to near $107. For India this means a wider trade deficit, rupee pressure and inflation worries."
+  },
+  {
+   "cat": "Global and macro",
+   "impact": "neg",
+   "title": "US 10-year yield at 5.24%, highest since 2007",
+   "body": "Markets are pricing further Fed rate hikes; the 30-year is near 5.56%. High US yields are a key driver of FPI outflows from India."
+  },
+  {
+   "cat": "Global and macro",
+   "impact": "neg",
+   "title": "AI stocks hit after OpenAI pauses some model training",
+   "body": "Reports that OpenAI paused training of some advanced models and shelved its GPT-6.1 Astra release weighed on chip and AI names. Meta fell 4.8%, Tesla 3.9%, while Nvidia rose 1.7%."
+  },
+  {
+   "cat": "Global and macro",
+   "impact": "neu",
+   "title": "US data and Fed speakers tonight",
+   "body": "JOLTS job openings are due, and Fed officials Bowman, Goolsbee and Williams are scheduled to speak. Hawkish comments could push yields higher again."
+  },
+  {
+   "cat": "India",
+   "impact": "neu",
+   "title": "September F&O expiry today",
+   "body": "Monthly derivatives contracts expire on Tuesday. Expect rollover-driven volatility, especially near the close."
+  },
+  {
+   "cat": "India",
+   "impact": "neg",
+   "title": "Indian bond yields and rupee under pressure",
+   "body": "The rupee ended near 95.98 per dollar, and oil above $100 keeps pressure on it. Rate-hike worries hit PSU banks hardest on Monday."
+  },
+  {
+   "cat": "India",
+   "impact": "pos",
+   "title": "US spares some Indian pharma from new tariff",
+   "body": "The US begins a 100% tariff on certain patented drug imports from 29 Sep, but specialty drugs for rare conditions from India and 19 other countries are exempt. Pharma was among the most resilient sectors on Monday."
+  },
+  {
+   "cat": "India",
+   "impact": "neu",
+   "title": "Tata Trusts proposes Tata Sons recast",
+   "body": "The plan would revert Tata Sons to its old operating model and could remove the need for a stock-market listing. Tata group stocks are in focus."
+  },
+  {
+   "cat": "India",
+   "impact": "pos",
+   "title": "Adani group settles SEBI MPS case",
+   "body": "Four Adani firms, Gautam Adani and 13 others settled with SEBI for ₹1.48 crore. SEBI separately found no evidence that Vinod Adani controlled the FPIs in question."
+  }
+ ],
+ "watch": [
+  {
+   "name": "Tata group stocks",
+   "why": "Tata Trusts' proposal for Tata Sons could skip a listing."
+  },
+  {
+   "name": "Pharma (Dr Reddy's, Sun, Zydus, Natco)",
+   "why": "US tariff exemption for rare-disease drugs. Zydus: USFDA inspection at Ahmedabad SEZ II closed with one observation. Natco: raised eGenesis investment to $16.7M."
+  },
+  {
+   "name": "Ola Electric",
+   "why": "Board approved a ₹1,000 cr rights issue of partly paid shares."
+  },
+  {
+   "name": "Varmora Granito",
+   "why": "Lists today after the IPO was subscribed 1.58 times."
+  },
+  {
+   "name": "Reliance, Bharti Airtel, Vodafone Idea",
+   "why": "August subscriber adds (TRAI): Jio +2.40M, Airtel +2.11M, Vi +0.51M."
+  },
+  {
+   "name": "Adani group",
+   "why": "SEBI settlement of the MPS case."
+  },
+  {
+   "name": "Clean Max Enviro",
+   "why": "Raised ₹2,500 cr via green debt securities."
+  },
+  {
+   "name": "Coforge",
+   "why": "Akhil Gupta appointed Chairperson from 29 Sep."
+  },
+  {
+   "name": "ITC",
+   "why": "Now owns 100% of Sproutlife."
+  },
+  {
+   "name": "Radico Khaitan",
+   "why": "Taking its luxury spirits to four major UK airports."
+  }
+ ],
+ "events": [
+  "9:00 to 9:08 AM: NSE pre-open session",
+  "September monthly F&O expiry (Nifty, Bank Nifty and others)",
+  "Varmora Granito listing",
+  "US JOLTS job openings (evening IST)",
+  "Fed speakers: Bowman, Goolsbee, Williams",
+  "Watch Brent crude and any US–Iran headlines through the day"
+ ],
+ "compiledNote": "Compiled from reports published up to about 9:05 AM IST on 29 Sep; intraday moves after the open are not included.",
+ "sources": [
+  {
+   "name": "Business Standard pre-market",
+   "url": "https://www.business-standard.com/markets/capital-market-news/gift-nifty-signals-weak-opening-as-fpi-selling-rising-crude-weigh-on-sentiment-126092900155_1.html"
+  },
+  {
+   "name": "Business Standard stocks to watch",
+   "url": "https://www.business-standard.com/markets/news/stocks-to-watch-sept-29-tata-stocks-pharma-stocks-ola-electric-voda-idea-itc-126092900099_1.html"
+  },
+  {
+   "name": "StockPil India markets (NSE data)",
+   "url": "https://stockpil.com/india-markets-today-2026-09-28"
+  },
+  {
+   "name": "Kotak Neo pre-market",
+   "url": "https://www.kotakneo.com/news/market-news/pre-market-29-september-2026-gift-nifty-global-cues-oil-prices/"
+  },
+  {
+   "name": "Investing.com historical data",
+   "url": "https://www.investing.com/indices/s-p-cnx-nifty-historical-data"
+  }
+ ],
+ "options": {
+  "asOf": "11:06 AM IST, 29 Sep (expiry day, after the open)",
+  "nifty": {
+   "expiry": "29 Sep",
+   "pcr": 0.65,
+   "maxPain": 22600,
+   "callWall": 22600,
+   "putWall": null,
+   "note": "Heavy call writing near 22,600; 22,500 to 22,700 is the expiry-day battleground."
+  }
+ },
+ "watchNotes": {}
+}

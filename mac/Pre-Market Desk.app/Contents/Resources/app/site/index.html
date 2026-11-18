@@ -1,0 +1,484 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Pre-Market Desk</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#EDF0F3; --panel:#FFFFFF; --ink:#18232E; --muted:#5B6875; --line:#D5DBE1;
+  --up:#0E7A5C; --down:#C0392F; --flat:#7A8691; --sun:#D9961A; --sun-soft:#F6E7C7;
+  --up-soft:#DDF0E9; --down-soft:#F7E0DD;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#131A21; --panel:#1B242D; --ink:#E4E9EE; --muted:#95A2AE; --line:#2C3843;
+    --up:#3DBE93; --down:#F0776B; --flat:#8995A0; --sun:#F0B44A; --sun-soft:#3A3120;
+    --up-soft:#173A31; --down-soft:#43231F;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#131A21; --panel:#1B242D; --ink:#E4E9EE; --muted:#95A2AE; --line:#2C3843;
+  --up:#3DBE93; --down:#F0776B; --flat:#8995A0; --sun:#F0B44A; --sun-soft:#3A3120;
+  --up-soft:#173A31; --down-soft:#43231F;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Instrument Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:15px;line-height:1.5;font-variant-numeric:tabular-nums}
+.wrap{max-width:1080px;margin:0 auto;padding:20px 16px 48px}
+header.top{display:flex;flex-wrap:wrap;gap:12px 24px;align-items:flex-end;justify-content:space-between;margin-bottom:18px}
+h1{font-size:28px;line-height:1.1;margin:0;font-weight:700;letter-spacing:-.01em}
+.sub{color:var(--muted);font-size:14px;margin-top:4px}
+.clock{text-align:right}
+.clock .big{font-size:26px;font-weight:700;line-height:1}
+.clock .small{color:var(--muted);font-size:13px}
+[hidden]{display:none!important}
+nav.tabs{display:flex;gap:6px;border-bottom:1px solid var(--line);margin-bottom:18px;overflow-x:auto}
+nav.tabs button{background:none;border:0;border-bottom:3px solid transparent;padding:10px 14px;font:inherit;font-weight:600;color:var(--muted);cursor:pointer;white-space:nowrap}
+nav.tabs button[aria-selected="true"]{color:var(--ink);border-color:var(--sun)}
+button:focus-visible,select:focus-visible{outline:2px solid var(--sun);outline-offset:2px}
+select{font:inherit;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:6px 8px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:18px}
+section{margin-bottom:18px}
+h2{font-size:18px;margin:0 0 12px;font-weight:700}
+h3{font-size:15px;margin:0 0 8px;font-weight:600}
+.muted{color:var(--muted)}
+.up{color:var(--up)} .down{color:var(--down)} .flat{color:var(--flat)}
+
+/* Bias hero */
+.bias{display:grid;grid-template-columns:1fr;gap:14px;border-left:6px solid var(--sun)}
+.bias .verdict{font-size:24px;font-weight:700;line-height:1.2}
+.bias p{margin:0;max-width:72ch}
+.gauge{position:relative;height:14px;border-radius:7px;background:linear-gradient(90deg,var(--down) 0%,var(--down-soft) 38%,var(--line) 50%,var(--up-soft) 62%,var(--up) 100%);margin:8px 0 4px}
+.gauge .pin{position:absolute;top:-6px;width:4px;height:26px;background:var(--ink);border-radius:2px;transform:translateX(-50%)}
+.gauge-labels{display:flex;justify-content:space-between;font-size:12px;color:var(--muted)}
+
+/* stat strip */
+.stats{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.stat{background:var(--panel);padding:12px 14px}
+.stat .l{font-size:13px;color:var(--muted)}
+.stat .v{font-size:19px;font-weight:700;margin-top:2px}
+.stat .c{font-size:13px;font-weight:600}
+.stat .n{font-size:12px;color:var(--muted);margin-top:2px}
+
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+@media (max-width:760px){.grid2{grid-template-columns:1fr}}
+
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{text-align:left;padding:7px 6px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-weight:600;color:var(--muted);font-size:13px}
+td.num,th.num{text-align:right;white-space:nowrap}
+.scroll{overflow-x:auto}
+.grp td{background:var(--bg);font-weight:600;font-size:13px;color:var(--muted)}
+
+/* sector bars */
+.bars{display:grid;gap:6px}
+.bar-row{display:grid;grid-template-columns:120px 1fr 60px;align-items:center;gap:8px;font-size:14px}
+.bar-track{position:relative;height:10px;background:var(--bg);border-radius:5px}
+.bar-track .mid{position:absolute;left:50%;top:-2px;bottom:-2px;width:1px;background:var(--line)}
+.bar-fill{position:absolute;top:0;height:10px;border-radius:5px}
+
+/* news */
+.news{list-style:none;margin:0;padding:0}
+.news li{padding:10px 0;border-bottom:1px solid var(--line);display:grid;grid-template-columns:10px 1fr;gap:10px}
+.news li:last-child{border-bottom:0}
+.dot{width:8px;height:8px;border-radius:50%;margin-top:7px}
+.dot.pos{background:var(--up)} .dot.neg{background:var(--down)} .dot.neu{background:var(--flat)}
+.news b{display:block;font-weight:600}
+.news span{color:var(--muted);font-size:14px}
+.legend{display:flex;gap:14px;font-size:12px;color:var(--muted);margin-bottom:6px;flex-wrap:wrap}
+.legend i{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;vertical-align:middle}
+
+.levels{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.lv{padding:10px 12px;border-radius:8px}
+.lv.s{background:var(--down-soft)} .lv.r{background:var(--up-soft)}
+.lv .t{font-size:13px;color:var(--muted)}
+.lv .x{font-size:18px;font-weight:700}
+
+/* trends */
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+.chip{border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:999px;padding:7px 12px;font:inherit;font-size:14px;cursor:pointer;display:flex;gap:8px;align-items:baseline}
+.chip[aria-pressed="true"]{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
+.chip small{font-weight:600}
+.overview{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;margin-bottom:18px}
+.ov{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px}
+.ov .nm{font-size:13px;color:var(--muted)}
+.ov .px{font-size:18px;font-weight:700}
+.ov .rw{display:flex;justify-content:space-between;font-size:13px}
+.ihead{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 18px;margin-bottom:10px}
+.ihead .px{font-size:30px;font-weight:700}
+.ihead .m{font-size:15px;font-weight:600}
+svg text{fill:var(--muted);font-size:11px;font-family:inherit}
+.note{font-size:13px;color:var(--muted);margin-top:8px}
+.pill{display:inline-block;padding:1px 8px;border-radius:999px;font-size:12px;font-weight:600}
+.pill.up{background:var(--up-soft)} .pill.down{background:var(--down-soft)}
+.empty{padding:30px;text-align:center;color:var(--muted)}
+footer{font-size:13px;color:var(--muted);margin-top:24px}
+footer a{color:inherit}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <h1>Pre-Market Desk</h1>
+      <div class="sub" id="window">Loading today's brief…</div>
+    </div>
+    <div id="appbar" hidden style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <span id="appstatus" class="muted" style="font-size:13px" role="status" aria-live="polite"></span>
+      <button class="chip" id="app-refresh">Refresh now</button>
+      <button class="chip" id="app-quit">Quit app</button>
+    </div>
+    <div class="clock">
+      <div class="big" id="countdown">--:--</div>
+      <div class="small" id="countlabel">to NSE open (9:15 IST)</div>
+    </div>
+  </header>
+
+  <nav class="tabs" role="tablist">
+    <button role="tab" aria-selected="true" data-tab="brief">Morning brief</button>
+    <button role="tab" aria-selected="false" data-tab="trends">Index trends</button>
+  </nav>
+
+  <main id="brief"></main>
+  <main id="trends" hidden></main>
+
+  <footer id="foot"></footer>
+</div>
+
+<script>
+const $ = (s, r=document) => r.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmt = (n, d=2) => n==null||isNaN(n) ? "—" : Number(n).toLocaleString("en-IN",{minimumFractionDigits:d,maximumFractionDigits:d});
+const pct = (n, d=2) => n==null||isNaN(n) ? "—" : (n>0?"+":"")+Number(n).toFixed(d)+"%";
+const cls = n => n==null ? "flat" : n>0 ? "up" : n<0 ? "down" : "flat";
+const dLabel = iso => { const d=new Date(iso+"T00:00:00"); return d.toLocaleDateString("en-IN",{day:"numeric",month:"short"}); };
+const dLong = iso => { const d=new Date(iso+"T00:00:00"); return d.toLocaleDateString("en-IN",{weekday:"short",day:"numeric",month:"short",year:"numeric"}); };
+
+/* ---------- countdown (IST) ---------- */
+function tick(){
+  const now = new Date();
+  const ist = new Date(now.getTime() + (now.getTimezoneOffset()+330)*60000);
+  const open = new Date(ist); open.setHours(9,15,0,0);
+  const close = new Date(ist); close.setHours(15,30,0,0);
+  const day = ist.getDay();
+  const el = $("#countdown"), lb = $("#countlabel");
+  if (day===0||day===6){ el.textContent="Weekend"; lb.textContent="NSE closed"; return; }
+  if (ist<open){ const m=Math.floor((open-ist)/60000); el.textContent=`${Math.floor(m/60)}h ${String(m%60).padStart(2,"0")}m`; lb.textContent="to NSE open (9:15 IST)"; }
+  else if (ist<close){ const m=Math.floor((close-ist)/60000); el.textContent="Market open"; lb.textContent=`${Math.floor(m/60)}h ${m%60}m to close`; }
+  else { el.textContent="Closed"; lb.textContent="Session over for today"; }
+}
+tick(); setInterval(tick, 30000);
+
+/* ---------- tabs ---------- */
+document.querySelectorAll("nav.tabs button").forEach(b=>b.addEventListener("click",()=>{
+  document.querySelectorAll("nav.tabs button").forEach(x=>x.setAttribute("aria-selected", x===b));
+  $("#brief").hidden = b.dataset.tab!=="brief";
+  $("#trends").hidden = b.dataset.tab!=="trends";
+}));
+
+/* ---------- brief render ---------- */
+function renderBrief(b, list){
+  $("#window").textContent = b.windowLabel || dLong(b.date);
+  const score = Math.max(-1, Math.min(1, b.bias?.score ?? 0));
+  const picker = list.length>1 ? `<label class="muted" style="font-size:13px">Past briefs <select id="pick">${list.map(x=>`<option value="${esc(x.id)}" ${x.id===b.date?"selected":""}>${esc(dLong(x.id))}</option>`).join("")}</select></label>` : "";
+
+  const stats = (b.keyStats||[]).map(s=>`<div class="stat"><div class="l">${esc(s.label)}</div><div class="v">${esc(s.value)}</div>${s.change?`<div class="c ${esc(s.dir||cls(parseFloat(s.change)))}">${esc(s.change)}</div>`:""}${s.note?`<div class="n">${esc(s.note)}</div>`:""}</div>`).join("");
+
+  let lastGrp=null;
+  const global = (b.global||[]).map(g=>{
+    const head = g.group!==lastGrp ? `<tr class="grp"><td colspan="3">${esc(g.group)}</td></tr>` : ""; lastGrp=g.group;
+    return head+`<tr><td>${esc(g.name)}</td><td class="num">${esc(g.value)}</td><td class="num ${cls(g.chg)}">${g.chg==null?"—":pct(g.chg)}</td></tr>`;
+  }).join("");
+
+  const secs = b.india?.sectors||[];
+  const maxAbs = Math.max(1, ...secs.map(s=>Math.abs(s.chg)));
+  const bars = secs.map(s=>{
+    const w = Math.abs(s.chg)/maxAbs*50;
+    const left = s.chg<0 ? 50-w : 50;
+    return `<div class="bar-row"><span>${esc(s.name)}</span><div class="bar-track"><div class="mid"></div><div class="bar-fill" style="left:${left}%;width:${w}%;background:var(--${s.chg<0?"down":"up"})"></div></div><span class="num ${cls(s.chg)}" style="text-align:right">${pct(s.chg)}</span></div>`;
+  }).join("");
+
+  const mover = (arr)=> (arr||[]).map(m=>`<tr><td>${esc(m.name)}</td><td class="num ${cls(m.chg)}">${pct(m.chg)}</td></tr>`).join("");
+
+  const cats = [...new Set((b.news||[]).map(n=>n.cat))];
+  const news = cats.map(c=>`<h3 style="margin-top:14px">${esc(c)}</h3><ul class="news">${b.news.filter(n=>n.cat===c).map(n=>`<li><div class="dot ${esc(n.impact||"neu")}"></div><div><b>${esc(n.title)}</b><span>${esc(n.body)}</span></div></li>`).join("")}</ul>`).join("");
+
+  const watch = (b.watch||[]).map(w=>`<tr><td><b>${esc(w.name)}</b></td><td>${esc(w.why)}</td></tr>`).join("");
+  const lv = b.levels||{};
+  const events = (b.events||[]).map(e=>`<li>${esc(e)}</li>`).join("");
+  const f = b.flows||{};
+
+  $("#brief").innerHTML = `
+  <section class="panel bias">
+    <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:baseline">
+      <div class="verdict">${esc(b.bias?.label||"")}</div>${picker}
+    </div>
+    <div>
+      <div class="gauge" role="img" aria-label="Opening bias ${esc(b.bias?.label||"")}"><div class="pin" style="left:${(score+1)*50}%"></div></div>
+      <div class="gauge-labels"><span>Bearish</span><span>Neutral</span><span>Bullish</span></div>
+    </div>
+    <p>${esc(b.bias?.summary||"")}</p>
+  </section>
+
+  <section class="stats">${stats}</section>
+
+  <div class="grid2">
+    <section class="panel">
+      <h2>Global markets overnight</h2>
+      <div class="scroll"><table><thead><tr><th>Market</th><th class="num">Level</th><th class="num">Change</th></tr></thead><tbody>${global}</tbody></table></div>
+      ${b.globalNote?`<div class="note">${esc(b.globalNote)}</div>`:""}
+    </section>
+    <section class="panel">
+      <h2>How India closed yesterday</h2>
+      <p style="margin:0 0 12px">${esc(b.india?.recap||"")}</p>
+      <div class="bars">${bars}</div>
+      <div class="grid2" style="margin-top:14px;gap:12px">
+        <div><h3>Top Nifty gainers</h3><table><tbody>${mover(b.india?.gainers)}</tbody></table></div>
+        <div><h3>Top Nifty losers</h3><table><tbody>${mover(b.india?.losers)}</tbody></table></div>
+      </div>
+    </section>
+  </div>
+
+  <div class="grid2">
+    <section class="panel">
+      <h2>Institutional flows</h2>
+      <table><tbody>
+        <tr><td>FII / FPI net (${esc(f.date||"")})</td><td class="num ${cls(f.fii)}">₹${fmt(f.fii,0)} cr</td></tr>
+        <tr><td>DII net (${esc(f.date||"")})</td><td class="num ${cls(f.dii)}">₹${fmt(f.dii,0)} cr</td></tr>
+        <tr><td>FPI month to date</td><td class="num ${cls(f.fiiMtd)}">₹${fmt(f.fiiMtd,0)} cr</td></tr>
+      </tbody></table>
+      ${f.note?`<div class="note">${esc(f.note)}</div>`:""}
+    </section>
+    <section class="panel">
+      <h2>Nifty levels in focus</h2>
+      <div class="levels">
+        <div class="lv r"><div class="t">Resistance</div><div class="x">${(lv.resistance||[]).map(x=>fmt(x,0)).join(" / ")}</div></div>
+        <div class="lv s"><div class="t">Support</div><div class="x">${(lv.support||[]).map(x=>fmt(x,0)).join(" / ")}</div></div>
+      </div>
+      ${lv.note?`<div class="note">${esc(lv.note)}</div>`:""}
+    </section>
+  </div>
+
+  ${optionsPanel(b.options)}
+
+  <section class="panel" id="wl-panel">${watchlistHTML(b)}</section>
+
+  <section class="panel">
+    <h2>News that matters before the open</h2>
+    <div class="legend"><span><i style="background:var(--up)"></i>Supportive</span><span><i style="background:var(--down)"></i>Negative</span><span><i style="background:var(--flat)"></i>Neutral or mixed</span></div>
+    ${news}
+  </section>
+
+  <div class="grid2">
+    <section class="panel">
+      <h2>Stocks in focus</h2>
+      <div class="scroll"><table><tbody>${watch}</tbody></table></div>
+    </section>
+    <section class="panel">
+      <h2>On today's calendar</h2>
+      <ul style="margin:0;padding-left:18px">${events}</ul>
+    </section>
+  </div>`;
+
+  $("#foot").innerHTML = `${b.compiledNote?esc(b.compiledNote)+" ":""}Sources: ${(b.sources||[]).map(s=>`<a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.name)}</a>`).join(", ")}. Information only, not investment advice.`;
+
+  const pk = $("#pick");
+  if (pk) pk.addEventListener("change", ()=>loadBrief(pk.value, list));
+}
+
+/* ---------- charts ---------- */
+function lineChart(series, isVol){
+  const W=720,H=220,P={l:52,r:12,t:12,b:26};
+  const vals=series.map(s=>s.c), mn=Math.min(...vals), mx=Math.max(...vals), pad=(mx-mn)*0.08||1;
+  const lo=mn-pad, hi=mx+pad;
+  const x=i=>P.l+(W-P.l-P.r)*(series.length===1?0.5:i/(series.length-1));
+  const y=v=>P.t+(H-P.t-P.b)*(1-(v-lo)/(hi-lo));
+  const pts=series.map((s,i)=>`${x(i).toFixed(1)},${y(s.c).toFixed(1)}`).join(" ");
+  const up = vals[vals.length-1]>=vals[0];
+  const col = isVol ? (up?"var(--down)":"var(--up)") : (up?"var(--up)":"var(--down)");
+  const ticks=[0,.25,.5,.75,1].map(t=>lo+(hi-lo)*t);
+  const grid=ticks.map(v=>`<line x1="${P.l}" x2="${W-P.r}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)"/><text x="${P.l-6}" y="${y(v)+4}" text-anchor="end">${fmt(v, isVol?1:0)}</text>`).join("");
+  const step=Math.ceil(series.length/7);
+  const xl=series.map((s,i)=> i%step===0||i===series.length-1 ? `<text x="${x(i)}" y="${H-8}" text-anchor="middle">${dLabel(s.d)}</text>`:"").join("");
+  const area=`${P.l},${H-P.b} ${pts} ${x(series.length-1)},${H-P.b}`;
+  return `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Closing levels">${grid}<polygon points="${area}" fill="${col}" opacity=".10"/><polyline points="${pts}" fill="none" stroke="${col}" stroke-width="2.2" stroke-linejoin="round"/>${series.map((s,i)=>`<circle cx="${x(i)}" cy="${y(s.c)}" r="2.6" fill="${col}"><title>${dLabel(s.d)}: ${fmt(s.c)}</title></circle>`).join("")}${xl}</svg>`;
+}
+function barChart(series){
+  const W=720,H=150,P={l:52,r:12,t:10,b:26};
+  const s2=series.filter(s=>s.p!=null);
+  const m=Math.max(0.5,...s2.map(s=>Math.abs(s.p)));
+  const bw=(W-P.l-P.r)/s2.length;
+  const y0=P.t+(H-P.t-P.b)/2, sc=(H-P.t-P.b)/2/m;
+  const bars=s2.map((s,i)=>{const h=Math.abs(s.p)*sc;const yy=s.p>=0?y0-h:y0;return `<rect x="${P.l+i*bw+bw*0.15}" y="${yy}" width="${bw*0.7}" height="${Math.max(h,1)}" rx="2" fill="var(--${s.p>=0?"up":"down"})"><title>${dLabel(s.d)}: ${pct(s.p)}</title></rect>`}).join("");
+  const step=Math.ceil(s2.length/7);
+  const xl=s2.map((s,i)=> i%step===0||i===s2.length-1 ? `<text x="${P.l+i*bw+bw/2}" y="${H-8}" text-anchor="middle">${dLabel(s.d)}</text>`:"").join("");
+  return `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Daily percentage change"><line x1="${P.l}" x2="${W-P.r}" y1="${y0}" y2="${y0}" stroke="var(--line)"/><text x="${P.l-6}" y="${P.t+8}" text-anchor="end">+${m.toFixed(1)}%</text><text x="${P.l-6}" y="${H-P.b}" text-anchor="end">-${m.toFixed(1)}%</text>${bars}${xl}</svg>`;
+}
+
+/* ---------- trends render ---------- */
+let INDICES=[], sel=null;
+function monthPct(ix){
+  const s=ix.series||[];
+  if (ix.monthPct!=null) return ix.monthPct;
+  if (s.length>1) return (s[s.length-1].c/s[0].c-1)*100;
+  return null;
+}
+function renderTrends(){
+  if (!INDICES.length){ $("#trends").innerHTML=`<div class="panel empty">No index data yet. Ask Claude to update the brief.</div>`; return; }
+  if (!sel) sel=INDICES[0].id;
+  const ix=INDICES.find(i=>i.id===sel)||INDICES[0];
+  const isVol = ix.kind==="vol";
+  const ov = INDICES.map(i=>{const mp=monthPct(i);const v=i.kind==="vol";return `<div class="ov"><div class="nm">${esc(i.name)}</div><div class="px">${fmt(i.last)}</div><div class="rw"><span class="${v?cls(-i.dayPct):cls(i.dayPct)}">Day ${pct(i.dayPct)}</span><span class="${v?cls(-mp):cls(mp)}">1M ${pct(mp)}</span></div></div>`}).join("");
+  const chips = INDICES.map(i=>`<button class="chip" aria-pressed="${i.id===sel}" data-id="${esc(i.id)}">${esc(i.short||i.name)} <small class="${i.kind==="vol"?cls(-i.dayPct):cls(i.dayPct)}">${pct(i.dayPct)}</small></button>`).join("");
+  const s = ix.series||[];
+  const mp = monthPct(ix);
+  let body;
+  if (s.length>=2){
+    const hi=Math.max(...s.map(x=>x.c)), lo=Math.min(...s.map(x=>x.c));
+    const upD=s.filter(x=>x.p>0).length, dnD=s.filter(x=>x.p<0).length;
+    const rows=[...s].reverse().map((r,i,arr)=>{
+      const fromStart=(r.c/s[0].c-1)*100;
+      return `<tr><td>${esc(dLong(r.d))}</td><td class="num">${fmt(r.c)}</td><td class="num"><span class="pill ${r.p>0?(isVol?"down":"up"):r.p<0?(isVol?"up":"down"):""} ${isVol?cls(-r.p):cls(r.p)}">${pct(r.p)}</span></td><td class="num ${isVol?cls(-fromStart):cls(fromStart)}">${pct(fromStart)}</td></tr>`;
+    }).join("");
+    body = `
+      <div class="ihead"><span class="px">${fmt(ix.last)}</span><span class="m ${isVol?cls(-ix.dayPct):cls(ix.dayPct)}">${pct(ix.dayPct)} on ${esc(dLabel(ix.lastDate))}</span><span class="m ${isVol?cls(-mp):cls(mp)}">${pct(mp)} over 1 month</span></div>
+      <div class="muted" style="font-size:13px;margin-bottom:6px">Range in window: ${fmt(lo)} to ${fmt(hi)}. ${upD} up days, ${dnD} down days out of ${s.length}.</div>
+      ${lineChart(s,isVol)}
+      <h3 style="margin-top:10px">Daily change</h3>
+      ${barChart(s)}
+      <h3 style="margin-top:14px">Day by day</h3>
+      <div class="scroll"><table><thead><tr><th>Date</th><th class="num">Close</th><th class="num">Day %</th><th class="num">Since ${esc(dLabel(s[0].d))}</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+  } else {
+    body = `<div class="ihead"><span class="px">${fmt(ix.last)}</span><span class="m ${cls(ix.dayPct)}">${pct(ix.dayPct)} on ${esc(dLabel(ix.lastDate))}</span><span class="m ${cls(mp)}">${pct(mp)} over 1 month</span></div>
+      <div class="empty" style="padding:18px 0">Day-by-day history for this index is not loaded yet. It fills in as daily updates are added.</div>`;
+  }
+  $("#trends").innerHTML = `<section class="overview">${ov}</section><div class="chips" role="group" aria-label="Choose index">${chips}</div><section class="panel"><h2>${esc(ix.name)}</h2>${body}${ix.note?`<div class="note">${esc(ix.note)}</div>`:""}${isVol?`<div class="note">For India VIX, colours are flipped: a rising VIX (more fear) shows red.</div>`:""}</section>`;
+  document.querySelectorAll(".chip").forEach(c=>c.addEventListener("click",()=>{sel=c.dataset.id;renderTrends();}));
+}
+
+/* ---------- options snapshot ---------- */
+function optionsPanel(o){
+  if (!o) return "";
+  const card=(name,x)=>{ if(!x) return ""; const pcrCls = x.pcr==null?"flat":x.pcr>=1?"up":x.pcr<0.8?"down":"flat";
+    return `<div class="ov"><div class="nm">${esc(name)}${x.expiry?` · expiry ${esc(x.expiry)}`:""}</div>
+    <div class="rw" style="margin-top:6px"><span>Put-call ratio</span><b class="${pcrCls}">${x.pcr==null?"—":Number(x.pcr).toFixed(2)}</b></div>
+    <div class="rw"><span>Max pain</span><b>${x.maxPain==null?"—":fmt(x.maxPain,0)}</b></div>
+    <div class="rw"><span>Biggest call OI (ceiling)</span><b class="down">${x.callWall==null?"—":fmt(x.callWall,0)}</b></div>
+    <div class="rw"><span>Biggest put OI (floor)</span><b class="up">${x.putWall==null?"—":fmt(x.putWall,0)}</b></div>
+    ${x.note?`<div class="note">${esc(x.note)}</div>`:""}</div>`; };
+  return `<section class="panel"><h2>Options positioning</h2>
+    <div class="overview" style="margin-bottom:0">${card("Nifty",o.nifty)}${card("Bank Nifty",o.banknifty)}</div>
+    <div class="note">${o.asOf?`Snapshot: ${esc(o.asOf)}. `:""}PCR above 1 means more puts than calls are open (often read as support); well below 1 means call writers dominate (often read as a cap). Max pain is the strike where option buyers lose most at expiry. These are positioning clues, not predictions.</div></section>`;
+}
+
+/* ---------- watchlist ---------- */
+let WATCH=[], CAN_EDIT=false;
+function watchlistHTML(b){
+  const notes=(b&&b.watchNotes)||{};
+  const rows=WATCH.map((w,i)=>`<tr><td><b>${esc(w.sym)}</b>${w.note?`<div class="muted" style="font-size:13px">${esc(w.note)}</div>`:""}</td><td>${notes[w.sym.toUpperCase()]?esc(notes[w.sym.toUpperCase()]):`<span class="muted">No overnight news found</span>`}</td>${CAN_EDIT?`<td class="num"><button class="chip" data-rm="${i}" aria-label="Remove ${esc(w.sym)}">Remove</button></td>`:""}</tr>`).join("");
+  const form = CAN_EDIT ? `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
+      <input id="wl-sym" placeholder="Symbol, e.g. HDFCBANK" aria-label="Stock symbol" style="font:inherit;padding:7px 10px;border:1px solid var(--line);border-radius:6px;background:var(--panel);color:var(--ink);flex:1 1 160px">
+      <input id="wl-note" placeholder="Your note (optional)" aria-label="Note" style="font:inherit;padding:7px 10px;border:1px solid var(--line);border-radius:6px;background:var(--panel);color:var(--ink);flex:2 1 220px">
+      <button class="chip" id="wl-add">Add to watchlist</button></div>` : "";
+  return `<h2>Your watchlist</h2>
+    ${WATCH.length?`<div class="scroll"><table><thead><tr><th>Stock</th><th>Overnight news</th>${CAN_EDIT?"<th></th>":""}</tr></thead><tbody>${rows}</tbody></table></div>`:`<p class="muted" style="margin:0">No stocks yet. ${CAN_EDIT?"Add the ones you trade and each morning's brief will check them for news.":"Add symbols to data/watchlist.json in the repo."}</p>`}
+    ${form}<div class="note" id="wl-msg"></div>`;
+}
+let CUR_BRIEF=null;
+function bindWatchlist(){
+  const add=$("#wl-add"); if(add) add.onclick=async()=>{
+    const sym=$("#wl-sym").value.trim().toUpperCase().replace(/[^A-Z0-9&\-]/g,""); if(!sym) return;
+    if (WATCH.some(w=>w.sym===sym)) { $("#wl-msg").textContent=`${sym} is already on the list.`; return; }
+    await saveWatch([...WATCH,{sym,note:$("#wl-note").value.trim().slice(0,120)}]);
+  };
+  document.querySelectorAll("[data-rm]").forEach(b=>b.onclick=()=>saveWatch(WATCH.filter((_,i)=>i!==+b.dataset.rm)));
+}
+async function saveWatch(list){
+  try{ await SRC.saveWatch(list); WATCH=list; }
+  catch(e){ CAN_EDIT=false; }
+  $("#wl-panel").innerHTML=watchlistHTML(CUR_BRIEF); bindWatchlist();
+  if(!CAN_EDIT) $("#wl-msg").textContent="Only the page owner can edit the watchlist.";
+}
+
+/* ---------- data sources: Claude artifact db, or static JSON files (GitHub Pages) ---------- */
+let SRC=null;
+const dbSource = DB => ({
+  async briefList(){ const q=await DB.collection("briefs").orderBy("date","desc").limit(30).get(); return q.docs.map(d=>d.id); },
+  async brief(id){ const s=await DB.doc("briefs/"+id).get(); return s.exists?s.data():null; },
+  async indices(){ const q=await DB.collection("indices").orderBy("order","asc").get(); return q.docs.map(d=>({id:d.id,...d.data()})); },
+  async watch(){ const s=await DB.doc("config/watchlist").get(); return s.exists?(s.data().items||[]):[]; },
+  async saveWatch(items){ await DB.doc("config/watchlist").set({items}); },
+  editable:true
+});
+const staticSource = () => {
+  const get = async p => { const r=await fetch(p,{cache:"no-store"}); if(!r.ok) throw {code:"http_"+r.status}; return r.json(); };
+  return {
+    async briefList(){ return (await get("data/briefs/index.json")).dates||[]; },
+    async brief(id){ return get(`data/briefs/${id}.json`); },
+    async indices(){ return get("data/indices.json"); },
+    async watch(){ try{ return (await get("data/watchlist.json")).items||[]; }catch(e){ return []; } },
+    async saveWatch(){ throw {code:"read_only"}; },
+    editable:false
+  };
+};
+async function loadBrief(id, list){
+  const b=await SRC.brief(id);
+  if (b){ CUR_BRIEF=b; renderBrief(b, list); bindWatchlist(); }
+}
+const noData = msg => { $("#window").textContent=msg; $("#brief").innerHTML=`<div class="panel empty">${esc(msg)}</div>`; renderTrends(); };
+async function loadAll(){
+  try{
+    const [ids, idx, wl] = await Promise.all([SRC.briefList(), SRC.indices(), SRC.watch()]);
+    INDICES=idx; WATCH=wl; renderTrends();
+    if (!ids.length) return noData("No brief yet. Run the morning update to create one.");
+    await loadBrief(ids[0], ids.map(id=>({id})));
+  }catch(e){
+    noData(location.protocol.startsWith("http") ? "Couldn't load data ("+(e.code||"error")+"). Reload the page to try again." : "Open this page inside Claude, or serve it next to its data folder.");
+  }
+}
+
+/* ---------- Mac app mode: a local server refreshes data on launch ---------- */
+async function appStatus(){
+  try{ const r=await fetch("api/status",{cache:"no-store"}); if(!r.ok) return null; const j=await r.json(); return j.app==="premarket"?j:null; }catch(e){ return null; }
+}
+const tstr = iso => iso ? new Date(iso).toLocaleTimeString("en-IN",{hour:"numeric",minute:"2-digit"}) : "";
+async function watchRefresh(){
+  const st=$("#appstatus"), btn=$("#app-refresh");
+  let s=await appStatus();
+  while (s && s.status==="running"){ st.textContent="Fetching fresh market data…"; btn.disabled=true; await new Promise(r=>setTimeout(r,2000)); s=await appStatus(); }
+  btn.disabled=false;
+  if (!s) { st.textContent="App server stopped. Reopen the app."; return; }
+  if (s.status==="error") st.textContent=`Refresh failed: ${s.error}. Showing last saved data.`;
+  else if (s.status==="done") st.textContent=`Updated ${tstr(s.finished)}`+(s.problems&&s.problems.length?` (${s.problems.length} source${s.problems.length>1?"s":""} unavailable, see footer)`:"");
+  await loadAll();
+}
+function startApp(){
+  $("#appbar").hidden=false;
+  $("#app-refresh").onclick=async()=>{ await fetch("api/refresh",{method:"POST"}); watchRefresh(); };
+  $("#app-quit").onclick=async()=>{ try{ await fetch("api/quit",{method:"POST"}); }catch(e){} document.body.innerHTML='<div class="wrap"><div class="panel empty">Pre-Market Desk has quit. You can close this window.</div></div>'; };
+  setInterval(()=>fetch("api/ping",{method:"POST"}).catch(()=>{}), 30000);
+  document.addEventListener("visibilitychange",()=>{ if(!document.hidden) fetch("api/ping",{method:"POST"}).catch(()=>{}); });
+  watchRefresh();
+}
+
+(async function init(){
+  let DB=null;
+  if (window.claude && window.claude.use){ try{ DB=await window.claude.use("db"); }catch(e){ DB=null; } }
+  SRC = DB ? dbSource(DB) : staticSource();
+  CAN_EDIT = SRC.editable;
+  if (!DB && location.protocol.startsWith("http") && await appStatus()){
+    CAN_EDIT=true;
+    SRC.saveWatch = async items => { const r=await fetch("api/watchlist",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({items})}); if(!r.ok) throw {code:"save_failed"}; };
+    await loadAll(); startApp(); return;
+  }
+  await loadAll();
+})();
+</script>
+</body>
+</html>
