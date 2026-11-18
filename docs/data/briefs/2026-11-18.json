@@ -1,10 +1,10 @@
 {
  "date": "2026-11-18",
- "windowLabel": "Wed 18 Nov 2026, refreshed 01:15 PM IST. Covers the previous close to now",
+ "windowLabel": "Wed 18 Nov 2026, refreshed 01:16 PM IST. Covers the previous close to now",
  "bias": {
   "score": -0.04,
   "label": "Neutral",
-  "summary": "Rule-based read: risk assets moved -0.09% on average overnight and Brent moved -1.47%. Add an Anthropic API key for a written analysis with news."
+  "summary": "Rule-based read: risk assets moved -0.09% on average overnight and Brent moved -1.48%. Add an Anthropic API key for a written analysis with news."
  },
  "keyStats": [
   {
@@ -31,15 +31,21 @@
    "dir": "up"
   },
   {
+   "label": "FII net (17-Nov-2026)",
+   "value": "₹4,195 cr",
+   "change": "DII ₹+197 cr",
+   "dir": "up"
+  },
+  {
    "label": "USD/INR",
-   "value": "93.50",
-   "change": "-0.49%",
+   "value": "93.49",
+   "change": "-0.51%",
    "dir": "up"
   },
   {
    "label": "Brent crude",
-   "value": "91.77",
-   "change": "-1.47%",
+   "value": "91.76",
+   "change": "-1.48%",
    "dir": "up"
   },
   {
@@ -83,8 +89,8 @@
   {
    "group": "Asia (this morning)",
    "name": "Hang Seng",
-   "value": "23,290",
-   "chg": -0.93
+   "value": "23,287",
+   "chg": -0.94
   },
   {
    "group": "Asia (this morning)",
@@ -119,8 +125,8 @@
   {
    "group": "Commodities & FX",
    "name": "Brent crude ($/bbl)",
-   "value": "91.77",
-   "chg": -1.47
+   "value": "91.76",
+   "chg": -1.48
   },
   {
    "group": "Commodities & FX",
@@ -131,20 +137,20 @@
   {
    "group": "Commodities & FX",
    "name": "Gold ($/oz)",
-   "value": "3,772",
-   "chg": -2.38
+   "value": "3,769",
+   "chg": -2.47
   },
   {
    "group": "Commodities & FX",
    "name": "US dollar index",
-   "value": "103.72",
-   "chg": 0.22
+   "value": "103.74",
+   "chg": 0.24
   },
   {
    "group": "Commodities & FX",
    "name": "USD/INR",
-   "value": "93.50",
-   "chg": -0.49
+   "value": "93.49",
+   "chg": -0.51
   },
   {
    "group": "Commodities & FX",
@@ -155,8 +161,8 @@
   {
    "group": "Commodities & FX",
    "name": "Bitcoin ($)",
-   "value": "64,523",
-   "chg": -0.57
+   "value": "64,555",
+   "chg": -0.52
   }
  ],
  "globalNote": "Asia levels are early-morning readings and keep moving until their close.",
@@ -166,7 +172,11 @@
   "gainers": [],
   "losers": []
  },
- "flows": {},
+ "flows": {
+  "dii": 196.93,
+  "fii": 4195.38,
+  "date": "17-Nov-2026"
+ },
  "levels": {
   "support": [
    25269,
@@ -178,7 +188,23 @@
   ],
   "note": "Classic pivot levels from the last session (pivot 25,385). See the Indicators tab for the full picture."
  },
- "options": null,
+ "options": {
+  "asOf": "01:16 PM IST, 18 Nov",
+  "nifty": {
+   "pcr": 0.77,
+   "maxPain": 25100,
+   "callWall": 26000,
+   "putWall": 25000,
+   "expiry": "23-Nov-2026"
+  },
+  "banknifty": {
+   "pcr": 1.17,
+   "maxPain": 60100,
+   "callWall": 62000,
+   "putWall": 60000,
+   "expiry": "23-Nov-2026"
+  }
+ },
  "news": [
   {
    "cat": "Economic Times Markets",
@@ -209,30 +235,6 @@
    "impact": "neu",
    "title": "Anthropic IPO: Why Wall Street is betting big on Claude AI maker",
    "body": "Anthropic is preparing for a blockbuster IPO that could value the Claude AI maker at up to $1.6 trillion. Strong investor demand, strategic stakes held by Amazon and Google, and bullish analyst forecasts are driving inte"
-  },
-  {
-   "cat": "Moneycontrol Market Reports",
-   "impact": "neu",
-   "title": "Taking Stock: Market fails to hold on to day#39;s gains, ends marginally higher",
-   "body": " Grasim Industries, Bharti Airtel, Nestle India, Maruti Suzuki and HCL Technologies were the biggest Nifty gainers, while losers included Sun Pharma, BPCL, Reliance Industries, MM and Hindalco Industries"
-  },
-  {
-   "cat": "Moneycontrol Market Reports",
-   "impact": "neu",
-   "title": "Sensex, Nifty gain for third day in a row; easing volatility to support bull trend",
-   "body": " Analysts expect the market to maintain the bullish undertone as elections and corporate earnings season continue"
-  },
-  {
-   "cat": "Moneycontrol Market Reports",
-   "impact": "neu",
-   "title": "Mid-day Mood | Cooling volatility sparks market rally, India VIX sees steepest fall in 4 years",
-   "body": " Broader markets outperformed benchmarks, with the BSE Midcap and BSE Smallcap rising up to 0.9 percent"
-  },
-  {
-   "cat": "Moneycontrol Market Reports",
-   "impact": "neu",
-   "title": "Sensex, Nifty extend gains to 3rd day, Q4 results to guide stock-specific action",
-   "body": " India VIX, which measures near-term volatility saw a sharp fall of 18 percent to trade around 10.42"
   }
  ],
  "watch": [],
@@ -248,5 +250,5 @@
    "url": "https://www.nseindia.com"
   }
  ],
- "compiledNote": "Generated automatically at 01:15 PM IST. Not refreshed: NSE option chain NIFTY: NSE redirected the request (https://www.nseindia.in/api/option-chain-contract-info?symbol=NIFTY); it usually blocks cloud servers, try running from home; NSE option chain BANKNIFTY: NSE redirected the request (https://www.nseindia.in/api/option-chain-contract-info?symbol=BANKNIFTY); it usually blocks cloud servers, try running from home; NSE FII/DII: NSE redirected the request (https://www.nseindia.in/api/fiidiiTradeReact); it usually blocks cloud servers, try running from home."
+ "compiledNote": "Generated automatically at 01:16 PM IST."
 }
