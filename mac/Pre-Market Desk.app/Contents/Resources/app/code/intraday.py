@@ -43,8 +43,10 @@ HISTORY_MONTHS = 36
 # ---------------------------------------------------------------- per-day simulation
 def simulate_day(bars: list[dict], signal_fn, ctx: dict, cost_pct: float = COST_PCT) -> list[dict]:
     """bars: one session's candles [{t:'HH:MM', o,h,l,c}] in time order.
-    signal_fn(i, bars, state, ctx) -> None or {"side": +1/-1, "stop": price or None}
-    or {"exit": True}. Called on each candle close while trading is allowed."""
+    signal_fn(i, bars, state, ctx) -> None or {"side": +1/-1, "stop": price or None,
+    "targetR": multiple of risk or None, "trail": move stop to entry at +1R} or {"exit": True}.
+    Called on each candle close while trading is allowed. Within a candle the stop is checked
+    before the target (the cautious assumption when both are touched)."""
     cost = cost_pct / 100
     trades, pos, state = [], None, {"n": 0}
 
@@ -61,8 +63,14 @@ def simulate_day(bars: list[dict], signal_fn, ctx: dict, cost_pct: float = COST_
         if pending is not None:
             if pos and (pending.get("exit") or pending.get("side") != pos["side"]):
                 close(b["o"], b["t"], "signal")
-            if pending.get("side") and b["t"] < LAST_ENTRY and pos is None:
-                pos = {"side": pending["side"], "px": b["o"], "t": b["t"], "stop": pending.get("stop")}
+            st = pending.get("stop")
+            gapped = st is not None and (pending.get("side", 0) * (b["o"] - st) <= 0)   # opened past the stop
+            if pending.get("side") and b["t"] < LAST_ENTRY and pos is None and not gapped:
+                risk = abs(b["o"] - st) if st is not None else None
+                tr = pending.get("targetR")
+                pos = {"side": pending["side"], "px": b["o"], "t": b["t"], "stop": st, "risk": risk,
+                       "target": b["o"] + pending["side"] * tr * risk if tr and risk else None,
+                       "trail": bool(pending.get("trail")) and bool(risk), "trailed": False}
                 state["n"] += 1
             pending = None
         if b["t"] >= SQUARE_OFF:
@@ -76,6 +84,16 @@ def simulate_day(bars: list[dict], signal_fn, ctx: dict, cost_pct: float = COST_
                 close(min(b["o"], st), b["t"], "stop")
             elif pos["side"] < 0 and b["h"] >= st:
                 close(max(b["o"], st), b["t"], "stop")
+        if pos and pos.get("target") is not None:
+            tg = pos["target"]
+            if pos["side"] > 0 and b["h"] >= tg:
+                close(max(b["o"], tg), b["t"], "target")
+            elif pos["side"] < 0 and b["l"] <= tg:
+                close(min(b["o"], tg), b["t"], "target")
+        if pos and pos.get("trail") and not pos["trailed"]:
+            best = b["h"] if pos["side"] > 0 else b["l"]
+            if pos["side"] * (best - pos["px"]) >= pos["risk"]:
+                pos["stop"], pos["trailed"] = pos["px"], True          # break-even from the next candle
         state["pos"] = pos["side"] if pos else 0
         pending = signal_fn(i, bars, state, ctx)
     else:
@@ -96,6 +114,40 @@ def s_orb(i, bars, state, ctx):
     if c < lo:
         return {"side": -1, "stop": hi}
     return None
+
+
+ORB_MAX_STOP_PCT = 0.5     # if the opening range is wider than this, the stop goes at its middle
+ORB_SKIP_RANGE_PCT = 1.0   # skip days whose opening range is wider than this
+ORB_LAST_ENTRY = "13:00"
+
+
+def s_orb_plus(i, bars, state, ctx):
+    """The Trade desk's rule. Opening range breakout, only in the direction of the daily trend
+    (previous close vs its 20-day average), first breakout before 1 PM only. Stop at the other
+    side of the range (or its middle if the range is wide), target 2x the risk, stop moved to
+    break-even once the trade is 1x the risk in profit, out by 3:15."""
+    if i == 0 or state["n"] >= 1 or state["pos"] or bars[i]["t"] >= ORB_LAST_ENTRY:
+        return None
+    trend = ctx.get("trend", 0)
+    hi, lo = bars[0]["h"], bars[0]["l"]
+    c = bars[i]["c"]
+    width = (hi - lo) / c * 100
+    if not trend or width > ORB_SKIP_RANGE_PCT:
+        return None
+    mid = (hi + lo) / 2
+    if trend > 0 and c > hi:
+        return {"side": 1, "stop": lo if width <= ORB_MAX_STOP_PCT else mid, "targetR": 2, "trail": True}
+    if trend < 0 and c < lo:
+        return {"side": -1, "stop": hi if width <= ORB_MAX_STOP_PCT else mid, "targetR": 2, "trail": True}
+    return None
+
+
+def daily_trend(closes: list[float]) -> int:
+    """+1 if the last close is above its 20-day average, -1 if below, 0 without enough history."""
+    if len(closes) < 20:
+        return 0
+    avg = sum(closes[-20:]) / 20
+    return 1 if closes[-1] > avg else -1 if closes[-1] < avg else 0
 
 
 def s_vwap(i, bars, state, ctx):
@@ -134,6 +186,10 @@ def s_long_day(i, bars, state, ctx):
 
 
 STRATEGIES = [
+    ("orb_plus", "Trade desk rule: ORB with trend filter", s_orb_plus,
+     "Opening range breakout taken only in the daily trend's direction, before 1 PM. Stop at the other side of "
+     "the first 15-minute range (its middle if wide), target 2x the risk, stop to break-even at 1x, out by 3:15. "
+     "This is the rule the Trade desk suggests live."),
     ("orb", "Opening range breakout (15 min)", s_orb,
      "Wait for the first 15-minute candle. Go long when a later candle closes above its high, short below its low. "
      "Stop at the other end of the range; square off at 3:15."),
@@ -165,7 +221,8 @@ def run_strategy(sessions, fn, cost_pct=COST_PCT) -> dict:
         d, bars = sessions[k]
         prev = sessions[k - 1][1]
         cpr = I.pivots(max(b["h"] for b in prev), min(b["l"] for b in prev), prev[-1]["c"])
-        tr = simulate_day(bars, fn, {"cpr": cpr}, cost_pct)
+        trend = daily_trend([s[1][-1]["c"] for s in sessions[max(0, k - 20):k]])
+        tr = simulate_day(bars, fn, {"cpr": cpr, "trend": trend}, cost_pct)
         for t in tr:
             t["d"] = d
             eq *= 1 + t["pct"] / 100
