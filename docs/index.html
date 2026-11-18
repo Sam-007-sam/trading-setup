@@ -138,6 +138,19 @@ svg text{fill:var(--muted);font-size:11px;font-family:inherit}
 .btsum tr.bh td{font-style:italic;color:var(--muted)}
 .lgd{display:flex;gap:16px;font-size:13px;color:var(--muted);margin:4px 0 6px;flex-wrap:wrap}
 .lgd i{display:inline-block;width:14px;height:3px;border-radius:2px;margin-right:6px;vertical-align:middle}
+.q{margin:0 0 14px}
+.q label{display:block;font-weight:600;margin-bottom:6px}
+.q input[type=number]{font:inherit;padding:8px 10px;border:1px solid var(--line);border-radius:6px;background:var(--panel);color:var(--ink);width:min(260px,100%)}
+.opts{display:flex;flex-wrap:wrap;gap:8px}
+.opts .chip[aria-pressed="true"]{background:var(--ink);color:var(--panel)}
+.badge{display:inline-block;padding:2px 10px;border-radius:999px;font-size:12px;font-weight:700;letter-spacing:.04em}
+.badge.paper{background:var(--sun-soft);color:var(--ink)} .badge.live{background:var(--down);color:#fff}
+.btn{font:inherit;font-weight:700;border:0;border-radius:8px;padding:10px 18px;cursor:pointer}
+.btn.go{background:var(--ink);color:var(--panel)} .btn.stop{background:var(--down);color:#fff}
+.btn:disabled{opacity:.5;cursor:default}
+.plan{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;margin:12px 0}
+.plan div{background:var(--bg);border-radius:8px;padding:8px 10px}
+.plan .l{font-size:12px;color:var(--muted)} .plan .v{font-weight:700;font-size:16px}
 .empty{padding:30px;text-align:center;color:var(--muted)}
 footer{font-size:13px;color:var(--muted);margin-top:24px}
 footer a{color:inherit}
@@ -163,6 +176,7 @@ footer a{color:inherit}
 
   <nav class="tabs" role="tablist">
     <button role="tab" aria-selected="true" data-tab="brief">Morning brief</button>
+    <button role="tab" aria-selected="false" data-tab="desk" hidden>Trade desk</button>
     <button role="tab" aria-selected="false" data-tab="trends">Index trends</button>
     <button role="tab" aria-selected="false" data-tab="tech">Indicators</button>
     <button role="tab" aria-selected="false" data-tab="bt">Backtest</button>
@@ -170,6 +184,7 @@ footer a{color:inherit}
   </nav>
 
   <main id="brief"></main>
+  <main id="desk" hidden></main>
   <main id="trends" hidden></main>
   <main id="tech" hidden></main>
   <main id="bt" hidden></main>
@@ -207,6 +222,8 @@ document.querySelectorAll("nav.tabs button").forEach(b=>b.addEventListener("clic
   document.querySelectorAll("nav.tabs button").forEach(x=>x.setAttribute("aria-selected", x===b));
   $("#brief").hidden = b.dataset.tab!=="brief";
   $("#trends").hidden = b.dataset.tab!=="trends";
+  $("#desk").hidden = b.dataset.tab!=="desk";
+  if (b.dataset.tab==="desk") deskLoad();
   $("#tech").hidden = b.dataset.tab!=="tech";
   $("#bt").hidden = b.dataset.tab!=="bt";
   $("#paper").hidden = b.dataset.tab!=="paper";
@@ -609,6 +626,90 @@ function renderPaper(){
   box.querySelectorAll("[data-p]").forEach(b=>b.onclick=()=>{pM=b.dataset.p;renderPaper();});
 }
 
+/* ---------- trade desk (Mac app only) ---------- */
+let DESKV=null, deskTimer=null, deskAns={quiz:{}};
+const api = async (path, body) => { const r = await fetch("api/desk"+path, body===undefined?{cache:"no-store"}:{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)}); return r.json(); };
+const rs = n => n==null?"—":(n<0?"−":"")+"₹"+Math.abs(Math.round(n)).toLocaleString("en-IN");
+async function deskLoad(){
+  clearTimeout(deskTimer);
+  DESKV = await api("");
+  const p = DESKV.profile;
+  let sug = null;
+  if (p && p.allowed && !DESKV.position) sug = await api("/suggest", {});
+  renderDesk(sug);
+  if (!$("#desk").hidden) deskTimer = setTimeout(deskLoad, DESKV.position ? 5000 : 30000);
+}
+function deskTested(){
+  const m = ID && ID.markets && ID.markets[0]; const s = m && m.strategies.find(x=>x.id==="orb_plus");
+  if (!s) return "";
+  const x=s.stats;
+  return `<div class="note"><b>How this rule has done in testing</b> (${esc(m.name)}, ${m.sessions} sessions, after costs): total ${pct(x.totalPct,1)}, ${x.winRatePct}% of trades won, profit factor ${x.profitFactor??"—"}. Past results don't predict future ones${x.totalPct<=0?"; so far it has <b>not</b> made money, which is why the desk defaults to paper mode":""}.</div>`;
+}
+function renderDesk(sug){
+  const v=DESKV, p=v.profile, box=$("#desk");
+  const log = (v.log||[]).slice().reverse().map(l=>`<tr><td class="muted">${esc(l.t)}</td><td>${esc(l.msg)}</td></tr>`).join("");
+  const logPanel = log ? `<section class="panel"><h2>Today's log</h2><div class="scroll"><table><tbody>${log}</tbody></table></div></section>` : "";
+  if (!p) {
+    const q = (v.questions||[]).map(x=>{
+      if (x.type==="yesno") return `<div class="q"><label>${esc(x.q)}</label><div class="opts">${[["Yes",true],["No",false]].map(([l,val])=>`<button class="chip" data-a="${x.id}" data-v='${JSON.stringify(val)}' aria-pressed="${deskAns[x.id]===val}">${l}</button>`).join("")}</div></div>`;
+      if (x.type==="number") return `<div class="q"><label for="qa-${x.id}">${esc(x.q)}</label><input type="number" id="qa-${x.id}" data-n="${x.id}" min="${x.min||0}" step="100" value="${deskAns[x.id]??""}"></div>`;
+      return `<div class="q"><label>${esc(x.q)}</label><div class="opts">${x.options.map(o=>`<button class="chip" data-a="${x.id}" data-v='${JSON.stringify(o)}' aria-pressed="${deskAns[x.id]===o}">${esc(o)}</button>`).join("")}</div></div>`;
+    }).join("");
+    const quiz = (v.quiz||[]).map(x=>`<div class="q"><label>${esc(x.q)}</label><div class="opts">${x.options.map((o,i)=>`<button class="chip" data-quiz="${x.id}" data-v="${i}" aria-pressed="${deskAns.quiz[x.id]===i}">${esc(o)}</button>`).join("")}</div></div>`).join("");
+    box.innerHTML = `<section class="panel"><h2>Before you trade today</h2>
+      <p class="muted" style="margin-top:0">Your answers set today's limits. The desk sizes every trade so a stop-loss can't cost more than your limit allows, and stops trading for the day when the limit is reached.</p>
+      ${q}<h3 style="margin-top:20px">Quick check</h3><p class="muted" style="margin-top:0">Three questions. Any wrong answer means paper trading today, with the explanation.</p>${quiz}
+      <button class="btn go" id="desk-start">Set today's limits</button> <span class="muted" id="desk-msg"></span></section>${logPanel}`;
+    box.querySelectorAll("[data-a]").forEach(b=>b.onclick=()=>{deskAns[b.dataset.a]=JSON.parse(b.dataset.v); readNums(); renderDesk(null);});
+    box.querySelectorAll("[data-quiz]").forEach(b=>b.onclick=()=>{deskAns.quiz[b.dataset.quiz]=+b.dataset.v; readNums(); renderDesk(null);});
+    $("#desk-start").onclick=async()=>{ readNums(); const r=await api("/start",{answers:deskAns}); if(r.error){$("#desk-msg").textContent=r.error;return;} deskLoad(); };
+    return;
+  }
+  const head = `<section class="panel"><div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;align-items:baseline">
+      <h2 style="margin:0">Today's limits</h2>${p.allowed?`<span class="badge ${p.mode}">${p.mode==="live"?"LIVE: REAL MONEY":"PAPER: SIMULATED"}</span>`:""}</div>
+      ${p.allowed?`<div class="plan"><div><div class="l">Max loss today</div><div class="v">${rs(p.maxLoss)}</div></div><div><div class="l">Loss budget left</div><div class="v">${rs(v.budgetLeft)}</div></div>
+      <div><div class="l">Per trade</div><div class="v">${rs(p.perTradeRisk)}</div></div><div><div class="l">Trades used</div><div class="v">${v.trades.length} of ${p.maxTrades}</div></div>
+      <div><div class="l">Day's result</div><div class="v ${cls(v.realized)}">${rs(v.realized)}</div></div><div><div class="l">Instrument</div><div class="v">${esc(p.instrument)}</div></div></div>
+      ${(p.notes||[]).map(n=>`<div class="note">${esc(n)}</div>`).join("")}`:`<p>${esc(p.reason)}</p>`}</section>`;
+  let main = "";
+  const pos = v.position;
+  if (pos) {
+    const up = pos.side>0, dist = (a,b)=>Math.abs(a-b);
+    main = `<section class="panel" style="border-left:6px solid var(--${up?"up":"down"})"><h2>Open trade: ${up?"long":"short"} ${esc(pos.name)}</h2>
+      <div class="plan"><div><div class="l">${esc(pos.name)} now</div><div class="v">${fmt(pos.lastIndex??pos.entryIndex)}</div></div>
+      <div><div class="l">Unrealised P&L</div><div class="v ${cls(pos.unrealized)}">${rs(pos.unrealized)}</div></div>
+      <div><div class="l">Entry</div><div class="v">${fmt(pos.entryIndex)}</div></div>
+      <div><div class="l">Stop-loss${pos.trailed?" (break-even)":""}</div><div class="v down">${fmt(pos.stop)}</div></div>
+      <div><div class="l">Target</div><div class="v up">${fmt(pos.target)}</div></div>
+      <div><div class="l">Holding</div><div class="v">${pos.instrument==="option"?`${pos.qty} × ${pos.option.strike} ${pos.option.kind}`:`${pos.qty} futures`}</div></div></div>
+      <p class="muted" style="margin:0 0 12px">The desk checks every 5 seconds: it exits at the stop or target, moves the stop to break-even at +1R, and closes everything at 3:15 PM. ${pos.mode==="live"?"A stop order also rests at the exchange.":"Paper trade: fills are simulated at live prices."}</p>
+      <button class="btn stop" id="desk-exit">Exit now</button></section>`;
+  } else if (p.allowed) {
+    if (!sug || sug.status!=="ok") main = `<section class="panel"><h2>Suggestions</h2><p>${esc(sug?sug.message:"Loading…")}</p></section>`;
+    else main = sug.markets.map(m=>{
+      if (!m.signal || !m.size || !m.size.ok) return `<section class="panel"><h2>${esc(m.name)}</h2><p style="margin:0">${esc(m.message||"Watching.")}</p></section>`;
+      const z=m.size, opt=z.instrument==="option", buy=m.side>0;
+      return `<section class="panel" style="border-left:6px solid var(--${buy?"up":"down"})"><h2>Suggestion: ${buy?"BUY":"SELL"} ${esc(m.name)}${opt?` (buy ${z.strike} ${z.kind})`:" futures"}</h2>
+        <div class="plan"><div><div class="l">Entry around</div><div class="v">${fmt(m.entry)}</div></div><div><div class="l">Stop-loss</div><div class="v down">${fmt(m.stop)}</div></div>
+        <div><div class="l">Target (2R)</div><div class="v up">${fmt(m.target)}</div></div><div><div class="l">Quantity</div><div class="v">${z.qty} (${z.lots} lot${z.lots>1?"s":""})</div></div>
+        <div><div class="l">Loss if stopped</div><div class="v down">${rs(z.riskAtStop)}</div></div><div><div class="l">${opt?"Premium cost":"Margin (approx.)"}</div><div class="v">${rs(opt?z.cost:z.marginEstimate)}</div></div></div>
+        <p class="muted" style="margin:0 0 12px">Why: the daily trend is ${m.trend>0?"up":"down"} and the ${esc(m.candle)} candle closed ${buy?"above":"below"} the opening range (${fmt(m.rangeLow)} to ${fmt(m.rangeHigh)}). Valid until ${esc(m.validUntil)}.${opt&&z.premiumEstimated?" Option price estimated from VIX in paper mode.":""} Loss can exceed the figure above if the market gaps through the stop.</p>
+        <button class="btn go" data-confirm="${esc(m.id)}" data-risk="${z.riskAtStop}" data-mode="${p.mode}">Confirm ${p.mode==="live"?"REAL":"paper"} trade</button> <span class="muted" id="cm-${esc(m.id)}"></span></section>`;
+    }).join("");
+  }
+  const trades = (v.trades||[]).map(t=>`<tr><td>${esc(t.name)}</td><td>${t.side>0?"Long":"Short"}</td><td class="num">${fmt(t.entryIndex)} → ${fmt(t.exitIndex)}</td><td>${esc(t.why)}</td><td class="num ${cls(t.pnl)}">${rs(t.pnl)}</td></tr>`).join("");
+  box.innerHTML = head + main + (trades?`<section class="panel"><h2>Today's trades</h2><div class="scroll"><table><thead><tr><th>Index</th><th>Side</th><th class="num">Index in → out</th><th>Exit</th><th class="num">Result</th></tr></thead><tbody>${trades}</tbody></table></div><div class="note">Results are after estimated charges.</div></section>`:"") + `<section class="panel">${deskTested()||'<p class="muted" style="margin:0">Backtest results for this rule appear after the next data refresh.</p>'}</section>` + logPanel;
+  const ex=$("#desk-exit"); if(ex) ex.onclick=async()=>{ if(!confirm("Exit the open trade now at the market price?")) return; const r=await api("/exit",{}); if(r.error) alert(r.error); deskLoad(); };
+  box.querySelectorAll("[data-confirm]").forEach(b=>b.onclick=async()=>{
+    const real=b.dataset.mode==="live";
+    if(!confirm(`${real?"REAL MONEY. ":""}Enter this trade? If the stop is hit you lose about ₹${(+b.dataset.risk).toLocaleString("en-IN")} plus charges; more if the market gaps.`)) return;
+    b.disabled=true; const r=await api("/confirm",{id:b.dataset.confirm});
+    if(r.error){ const m=document.getElementById("cm-"+b.dataset.confirm); if(m) m.textContent=r.error; b.disabled=false; return; }
+    deskLoad();
+  });
+}
+function readNums(){ document.querySelectorAll("[data-n]").forEach(i=>{ if(i.value!=="") deskAns[i.dataset.n]=+i.value; }); }
+
 /* ---------- options snapshot ---------- */
 function optionsPanel(o){
   if (!o) return "";
@@ -719,8 +820,9 @@ async function watchRefresh(){
 }
 function startApp(){
   $("#appbar").hidden=false;
+  document.querySelector('[data-tab="desk"]').hidden=false;
   $("#app-refresh").onclick=async()=>{ await fetch("api/refresh",{method:"POST"}); watchRefresh(); };
-  $("#app-quit").onclick=async()=>{ try{ await fetch("api/quit",{method:"POST"}); }catch(e){} document.body.innerHTML='<div class="wrap"><div class="panel empty">Pre-Market Desk has quit. You can close this window.</div></div>'; };
+  $("#app-quit").onclick=async()=>{ try{ const r=await fetch("api/quit",{method:"POST"}); if(r.status===409){ alert((await r.json()).error); return; } }catch(e){} document.body.innerHTML='<div class="wrap"><div class="panel empty">Pre-Market Desk has quit. You can close this window.</div></div>'; };
   setInterval(()=>fetch("api/ping",{method:"POST"}).catch(()=>{}), 30000);
   document.addEventListener("visibilitychange",()=>{ if(!document.hidden) fetch("api/ping",{method:"POST"}).catch(()=>{}); });
   watchRefresh();

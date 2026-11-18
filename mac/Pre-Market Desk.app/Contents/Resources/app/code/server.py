@@ -27,6 +27,22 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 
 IDLE_EXIT_SECONDS = 240
+DESK = None
+
+
+def desk():
+    global DESK
+    if DESK is None:
+        import desk as D
+        DESK = D.Desk()
+    return DESK
+
+
+def desk_has_position() -> bool:
+    try:
+        return bool(DESK and DESK.state and DESK.state.get("position"))
+    except Exception:
+        return False
 STATE = {"app": "premarket", "status": "idle", "started": None, "finished": None,
          "error": None, "problems": []}
 LOCK = threading.Lock()
@@ -89,8 +105,18 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             self.send_header("Cache-Control", "no-store")
         super().end_headers()
 
+    def _body(self) -> dict:
+        n = int(self.headers.get("Content-Length", "0") or 0)
+        return json.loads(self.rfile.read(min(n, 100_000)) or b"{}")
+
     def do_GET(self):
         global LAST_PING
+        if self.path.startswith("/api/desk"):
+            LAST_PING = time.time()
+            try:
+                return self._json(desk().view())
+            except Exception as e:
+                return self._json({"error": str(e)}, 500)
         if self.path.startswith("/api/status"):
             LAST_PING = time.time()
             return self._json(STATE)
@@ -104,6 +130,21 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             return self._json({"ok": True})
         if self.path.startswith("/api/ping"):
             return self._json({"ok": True})
+        if self.path.startswith("/api/desk/"):
+            try:
+                act = self.path.split("/api/desk/")[1].split("?")[0]
+                body = self._body()
+                d = desk()
+                res = {"start": lambda: d.start(body.get("answers") or {}),
+                       "suggest": d.suggest,
+                       "confirm": lambda: d.confirm(str(body.get("id", ""))),
+                       "exit": d.exit_now}.get(act)
+                if not res:
+                    return self._json({"error": "unknown action"}, 404)
+                return self._json(res())
+            except Exception as e:
+                traceback.print_exc()
+                return self._json({"error": str(e)}, 500)
         if self.path.startswith("/api/watchlist"):
             try:
                 n = int(self.headers.get("Content-Length", "0"))
@@ -117,6 +158,8 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             except Exception as e:
                 return self._json({"error": str(e)}, 400)
         if self.path.startswith("/api/quit"):
+            if desk_has_position():
+                return self._json({"error": "A trade is open. Exit it first; the app keeps managing it until then."}, 409)
             self._json({"ok": True})
             threading.Timer(0.5, lambda: os._exit(0)).start()
             return
@@ -133,9 +176,22 @@ def main() -> None:
     handler = functools.partial(Handler, directory=args.site)
     httpd = http.server.ThreadingHTTPServer(("127.0.0.1", args.port), handler)
 
+    def manager():   # manages an open Trade desk position every few seconds, window open or not
+        while True:
+            time.sleep(5)
+            if desk_has_position():
+                try:
+                    DESK.tick()
+                except Exception:
+                    traceback.print_exc()
+
+    threading.Thread(target=manager, daemon=True).start()
+
     def watchdog():
         while True:
             time.sleep(15)
+            if desk_has_position():
+                continue        # never stop while a trade is being managed
             if time.time() - LAST_PING > IDLE_EXIT_SECONDS and STATE["status"] != "running":
                 print("No open window for a while; stopping.", flush=True)
                 os._exit(0)

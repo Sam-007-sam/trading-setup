@@ -10,7 +10,8 @@ Rules applied to every strategy:
   * Stop-losses fill at the stop price, or at the candle's open if it gapped past the stop.
   * Every position is squared off at the open of the 3:15 PM candle, and no new trade starts after
     3:00 PM. Nothing is held overnight.
-  * COST_PCT is charged per side (futures brokerage, STT, exchange fees and slippage).
+  * COST_PCT is charged per side: realistic Nifty/Bank Nifty futures charges plus slippage.
+    Buying options costs more as a share of the money at risk; results here are at index level.
   * The index itself is traded at 1x. NSE index data has no volume, so "VWAP" here is the
     session's running average price (a time-weighted stand-in).
 
@@ -32,7 +33,8 @@ logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
 
 ROOT = pathlib.Path(__file__).resolve().parent
 DATA = pathlib.Path(os.environ.get("PMD_DATA") or (ROOT / "docs" / "data"))
-COST_PCT = 0.03
+COST_PCT = 0.012    # per side: index futures charges (~0.0072%: brokerage, STT on sell, exchange, stamp, GST)
+                    # plus ~0.005% slippage. Was 0.03 until 18 Nov 2026, which overstated costs about 2.5x
 SQUARE_OFF = "15:15"
 LAST_ENTRY = "15:00"     # no new positions in the final candle before square-off
 NARROW_CPR_PCT = 0.25
