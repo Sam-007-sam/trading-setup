@@ -12,6 +12,7 @@ Pages serves the dashboard.
 - `mac/` holds the Mac app bundle (`Pre-Market Desk.app`) and its install notes.
 
 - `fetch.py` pulls the data and writes `docs/data/`.
+- `indicators.py` computes daily technical indicators (EMA 20/50/200, RSI, MACD, Supertrend, Bollinger, ATR, pivots and CPR) and a trend verdict per index. It has no dependencies, so the trading code can reuse it later.
 - `docs/index.html` is the dashboard. It reads `docs/data/` (the same page also runs inside Claude).
 - `.github/workflows/premarket.yml` runs `fetch.py` on schedule and commits the new data.
 

@@ -23,6 +23,8 @@ import sys
 
 import requests
 
+import indicators
+
 log = logging.getLogger("premarket")
 logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
 
@@ -34,12 +36,12 @@ KEEP_BRIEFS = 60          # how many past briefs the dropdown lists
 WINDOW_SESSIONS = 21      # ~1 month of trading days in the day-wise table
 
 # ---------------------------------------------------------------- configuration
-# (id, order, display name, short label, kind, Yahoo Finance ticker)
+# (id, order, display name, short label, kind, Yahoo Finance ticker; "A|B" = try A, then B)
 INDICES = [
     ("nifty50",   1, "Nifty 50",                 "Nifty 50",  "index", "^NSEI"),
     ("banknifty", 2, "Nifty Bank",               "Bank Nifty", "index", "^NSEBANK"),
     ("finnifty",  3, "Nifty Financial Services", "FinNifty",  "index", "NIFTY_FIN_SERVICE.NS"),
-    ("midcap",    4, "Nifty Midcap Select",      "Midcap Select", "index", "NIFTY_MID_SELECT.NS"),
+    ("midcap",    4, "Nifty Midcap Select",      "Midcap Select", "index", "NIFTY_MID_SELECT.NS|^NSEMDCP50|NIFTY_MIDCAP_100.NS"),
     ("sensex",    5, "BSE Sensex",               "Sensex",    "index", "^BSESN"),
     ("indiavix",  6, "India VIX",                "India VIX", "vol",   "^INDIAVIX"),
 ]
@@ -150,6 +152,23 @@ def rule_based_bias(glob: list[dict]) -> dict:
 
 
 # ---------------------------------------------------------------- fetchers
+def yf_ohlc(ticker: str, period: str = "2y") -> list[dict]:
+    import yfinance as yf
+    df = yf.Ticker(ticker).history(period=period, interval="1d", auto_adjust=False)
+    if df is None or df.empty:
+        raise ValueError(f"no data for {ticker}")
+    df = df.dropna(subset=["Close"])
+    return [{"d": ix.date().isoformat(), "o": float(r.Open), "h": float(r.High), "l": float(r.Low),
+             "c": float(r.Close)} for ix, r in df.iterrows()]
+
+
+def completed_bars(bars: list[dict], today: dt.date, now: dt.datetime) -> list[dict]:
+    """Drop today's still-forming bar before the 3:30 PM close (plus a 10-minute buffer)."""
+    if bars and bars[-1]["d"] == today.isoformat() and (now.hour, now.minute) < (15, 40):
+        return bars[:-1]
+    return bars
+
+
 def yf_closes(ticker: str, period: str = "3mo") -> list[tuple[str, float]]:
     import yfinance as yf  # imported lazily so helpers above can be tested without it
     df = yf.Ticker(ticker).history(period=period, interval="1d", auto_adjust=False)
@@ -165,20 +184,32 @@ def fetch_indices(today: dt.date, now: dt.datetime) -> list[dict]:
     except Exception:
         pass
     out = []
-    for iid, order, name, short, kind, ticker in INDICES:
+    for iid, order, name, short, kind, tickers in INDICES:
         doc = {"id": iid, "order": order, "name": name, "short": short, "kind": kind}
-        try:
-            built = build_series(yf_closes(ticker), today, now)
-            if not built:
-                raise ValueError("not enough history")
-            doc.update(built)
-            doc["note"] = f"Source: Yahoo Finance ({ticker}). 1-month change vs the close a month earlier."
-        except Exception as e:  # keep yesterday's data rather than blanking the index
-            PROBLEMS.append(f"{name}: {e}")
-            log.warning("index %s failed: %s", name, e)
+        errors = []
+        for ticker in tickers.split("|"):
+            try:
+                bars = completed_bars(yf_ohlc(ticker), today, now)
+                built = build_series([(b["d"], b["c"]) for b in bars], today, now)
+                if not built or len(bars) < 40:
+                    raise ValueError("not enough history")
+                doc.update(built)
+                if ticker == "NIFTY_MIDCAP_100.NS":
+                    doc.update(name="Nifty Midcap 100", short="Midcap 100")
+                elif ticker == "^NSEMDCP50":
+                    doc.update(name="Nifty Midcap 50", short="Midcap 50")
+                doc["tech"] = indicators.analyze(bars, kind)
+                doc["note"] = f"Source: Yahoo Finance ({ticker}). 1-month change vs the close a month earlier."
+                break
+            except Exception as e:
+                errors.append(f"{ticker}: {e}")
+        else:  # every ticker failed: keep yesterday's data rather than blanking the index
+            PROBLEMS.append(f"{name}: {'; '.join(errors)}")
+            log.warning("index %s failed: %s", name, errors)
             if iid in old:
                 doc = old[iid]
-                doc["note"] = (doc.get("note", "") + " (Not refreshed this morning.)").strip()
+                doc["note"] = (doc.get("note", "").replace(" (Not refreshed this morning.)", "")
+                               + " (Not refreshed this morning.)").strip()
             else:
                 continue
         out.append(doc)
@@ -208,24 +239,42 @@ def nse_session() -> requests.Session:
     return s
 
 
-def fetch_options(s: requests.Session, symbol: str) -> dict | None:
-    r = s.get(f"https://www.nseindia.com/api/option-chain-indices?symbol={symbol}", timeout=20)
+def _nse_json(s: requests.Session, url: str) -> dict:
+    r = s.get(url, timeout=20, allow_redirects=False)
+    if r.status_code in (301, 302, 303, 307, 308):
+        raise ValueError(f"NSE redirected the request ({r.headers.get('Location', '?')}); "
+                         "it usually blocks cloud servers, try running from home")
     r.raise_for_status()
-    rec = r.json()["records"]
-    expiry = rec["expiryDates"][0]
-    rows = [d for d in rec["data"] if d.get("expiryDate") == expiry]
-    ce = {d["strikePrice"]: d["CE"]["openInterest"] for d in rows if "CE" in d}
-    pe = {d["strikePrice"]: d["PE"]["openInterest"] for d in rows if "PE" in d}
+    return r.json()
+
+
+def fetch_options(s: requests.Session, symbol: str) -> dict | None:
+    """Nearest-expiry option chain. Uses NSE's current v3 API, falling back to the older one."""
+    try:
+        info = _nse_json(s, f"https://www.nseindia.com/api/option-chain-contract-info?symbol={symbol}")
+        expiry = info["expiryDates"][0]
+        data = _nse_json(s, "https://www.nseindia.com/api/option-chain-v3?type=Indices"
+                            f"&symbol={symbol}&expiry={expiry}")
+        rows = data["records"]["data"]
+    except Exception as v3_err:
+        try:
+            rec = _nse_json(s, f"https://www.nseindia.com/api/option-chain-indices?symbol={symbol}")["records"]
+            expiry = rec["expiryDates"][0]
+            rows = [d for d in rec["data"] if d.get("expiryDate") == expiry]
+        except Exception:
+            raise v3_err
+    ce = {d["strikePrice"]: d["CE"]["openInterest"] for d in rows if d.get("CE")}
+    pe = {d["strikePrice"]: d["PE"]["openInterest"] for d in rows if d.get("PE")}
     out = summarize_chain(ce, pe)
+    if not out:
+        raise ValueError("option chain came back empty")
     out["expiry"] = expiry
     return out
 
 
 def fetch_flows(s: requests.Session) -> dict | None:
-    r = s.get("https://www.nseindia.com/api/fiidiiTradeReact", timeout=20)
-    r.raise_for_status()
     out = {}
-    for row in r.json():
+    for row in _nse_json(s, "https://www.nseindia.com/api/fiidiiTradeReact"):
         cat = row.get("category", "").upper()
         val = float(str(row.get("netValue", "0")).replace(",", ""))
         if "FII" in cat or "FPI" in cat:
@@ -303,6 +352,16 @@ def fmt_signed(x: float | None, suffix: str = "%") -> str:
     return "—" if x is None else f"{x:+.2f}{suffix}"
 
 
+def pivot_levels(tech: dict | None) -> dict:
+    """Fallback Nifty levels from classic pivots when no AI summary is available."""
+    pv = (tech or {}).get("pivots")
+    if not pv:
+        return {}
+    return {"support": [round(pv["S1"]), round(pv["S2"])], "resistance": [round(pv["R1"]), round(pv["R2"])],
+            "note": f"Classic pivot levels from the last session (pivot {pv['P']:,.0f}). "
+                    "See the Indicators tab for the full picture."}
+
+
 def main() -> int:
     now = dt.datetime.now(IST)
     today = now.date()
@@ -336,7 +395,10 @@ def main() -> int:
     context = {
         "date": today.isoformat(),
         "indices": {k: {"last": v.get("last"), "dayPct": v.get("dayPct"), "monthPct": v.get("monthPct"),
-                        "lastDate": v.get("lastDate")} for k, v in ix.items()},
+                        "lastDate": v.get("lastDate"),
+                        "technicals": {t: (v.get("tech") or {}).get(t) for t in ("verdict", "pivots", "atr")}
+                        | {"readings": [f"{r['name']}: {r['reading']}" for r in (v.get("tech") or {}).get("rows", [])]}}
+                    for k, v in ix.items()},
         "global": [{k: g[k] for k in ("group", "name", "value", "chg")} for g in glob],
         "options": options, "flows": flows, "watchlist": watch,
     }
@@ -387,7 +449,7 @@ def main() -> int:
         "globalNote": "Asia levels are early-morning readings and keep moving until their close.",
         "india": (llm or {}).get("india") or {"recap": "", "sectors": [], "gainers": [], "losers": []},
         "flows": fl,
-        "levels": (llm or {}).get("levels") or {},
+        "levels": (llm or {}).get("levels") or pivot_levels(n.get("tech")),
         "options": ({"asOf": f"{now:%I:%M %p} IST, {today:%d %b}", **options} if options else None),
         "news": (llm or {}).get("news") or fetch_rss(),
         "watch": (llm or {}).get("watch") or [],

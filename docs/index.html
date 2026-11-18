@@ -117,6 +117,21 @@ svg text{fill:var(--muted);font-size:11px;font-family:inherit}
 .note{font-size:13px;color:var(--muted);margin-top:8px}
 .pill{display:inline-block;padding:1px 8px;border-radius:999px;font-size:12px;font-weight:600}
 .pill.up{background:var(--up-soft)} .pill.down{background:var(--down-soft)}
+.tgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px;margin-bottom:18px}
+.tcard{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px;text-align:left;font:inherit;color:var(--ink);cursor:pointer}
+.tcard[aria-pressed="true"]{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
+.tcard .nm{font-size:13px;color:var(--muted)}
+.tcard .vd{font-size:16px;font-weight:700;margin:2px 0 6px}
+.meter{display:flex;height:6px;border-radius:3px;overflow:hidden;background:var(--line)}
+.meter i{display:block}
+.tcard .ct{font-size:12px;color:var(--muted);margin-top:5px}
+.sig{display:inline-block;min-width:62px;text-align:center;padding:1px 8px;border-radius:999px;font-size:12px;font-weight:600}
+.sig.bull{background:var(--up-soft);color:var(--up)} .sig.bear{background:var(--down-soft);color:var(--down)} .sig.neutral{background:var(--bg);color:var(--muted)}
+.ladder{display:grid;gap:4px}
+.rung{display:grid;grid-template-columns:90px 1fr 80px;gap:10px;align-items:center;font-size:14px;padding:5px 10px;border-radius:6px}
+.rung.r{background:var(--up-soft)} .rung.s{background:var(--down-soft)} .rung.p{background:var(--sun-soft);font-weight:700}
+.rung.now{background:transparent;border:1px dashed var(--ink);font-weight:700}
+.rung .dist{text-align:right;color:var(--muted);font-size:13px}
 .empty{padding:30px;text-align:center;color:var(--muted)}
 footer{font-size:13px;color:var(--muted);margin-top:24px}
 footer a{color:inherit}
@@ -143,10 +158,12 @@ footer a{color:inherit}
   <nav class="tabs" role="tablist">
     <button role="tab" aria-selected="true" data-tab="brief">Morning brief</button>
     <button role="tab" aria-selected="false" data-tab="trends">Index trends</button>
+    <button role="tab" aria-selected="false" data-tab="tech">Indicators</button>
   </nav>
 
   <main id="brief"></main>
   <main id="trends" hidden></main>
+  <main id="tech" hidden></main>
 
   <footer id="foot"></footer>
 </div>
@@ -180,6 +197,7 @@ document.querySelectorAll("nav.tabs button").forEach(b=>b.addEventListener("clic
   document.querySelectorAll("nav.tabs button").forEach(x=>x.setAttribute("aria-selected", x===b));
   $("#brief").hidden = b.dataset.tab!=="brief";
   $("#trends").hidden = b.dataset.tab!=="trends";
+  $("#tech").hidden = b.dataset.tab!=="tech";
 }));
 
 /* ---------- brief render ---------- */
@@ -362,6 +380,44 @@ function renderTrends(){
   document.querySelectorAll(".chip").forEach(c=>c.addEventListener("click",()=>{sel=c.dataset.id;renderTrends();}));
 }
 
+/* ---------- indicators ---------- */
+let tsel=null;
+function renderTech(){
+  const box=$("#tech");
+  const list=INDICES.filter(i=>i.tech);
+  if(!list.length){ box.innerHTML=`<div class="panel empty">Indicators appear after the next data refresh.</div>`; return; }
+  if(!tsel || !list.some(i=>i.id===tsel)) tsel=list[0].id;
+  const ix=list.find(i=>i.id===tsel), t=ix.tech, isVol=ix.kind==="vol";
+  const vcls = v => /up/i.test(v)?"up":/down/i.test(v)?"down":"flat";
+  const cards=list.map(i=>{const x=i.tech, v=i.kind==="vol";
+    const tot=(x.bull||0)+(x.bear||0)||1;
+    return `<button class="tcard" aria-pressed="${i.id===tsel}" data-id="${esc(i.id)}"><div class="nm">${esc(i.short||i.name)}</div>
+      <div class="vd ${v?"flat":vcls(x.verdict)}">${esc(x.verdict)}</div>
+      ${v?`<div class="ct">RSI ${esc((x.rows.find(r=>r.name==="RSI (14)")||{}).value??"—")}</div>`:
+      `<div class="meter" aria-hidden="true"><i style="width:${(x.bull||0)/tot*100}%;background:var(--up)"></i><i style="width:${(x.bear||0)/tot*100}%;background:var(--down)"></i></div>
+      <div class="ct">${x.bull||0} bullish · ${x.bear||0} bearish signals</div>`}</button>`;}).join("");
+  const rows=t.rows.map(r=>`<tr><td><b>${esc(r.name)}</b></td><td class="num">${r.value==null?"—":typeof r.value==="number"?fmt(r.value,Math.abs(r.value)<1000?2:0):esc(r.value)}</td><td>${esc(r.reading)}</td><td class="num">${isVol?"":`<span class="sig ${esc(r.signal)}">${r.signal==="bull"?"Bullish":r.signal==="bear"?"Bearish":"Neutral"}</span>`}</td></tr>`).join("");
+  let ladder="";
+  if(t.pivots){
+    const p=t.pivots, c=t.close;
+    const lv=[["R3",p.R3,"r"],["R2",p.R2,"r"],["R1",p.R1,"r"],["CPR top",p.cprTop,"p"],["Pivot",p.P,"p"],["CPR bottom",p.cprBottom,"p"],["S1",p.S1,"s"],["S2",p.S2,"s"],["S3",p.S3,"s"],["Last close",c,"now"]];
+    lv.sort((a,b)=>b[1]-a[1]);
+    ladder=`<section class="panel"><h2>Levels for the next session</h2>
+      <div class="ladder">${lv.map(([n,v,k])=>`<div class="rung ${k}"><span>${esc(n)}</span><b>${fmt(v,0)}</b><span class="dist">${k==="now"?"":pct((v/c-1)*100)}</span></div>`).join("")}</div>
+      <div class="note">Classic floor pivots and the Central Pivot Range (CPR) from the last session's high, low and close. A narrow CPR (this one is ${fmt(p.cprWidthPct,2)}% wide) often comes before a trending day; a wide one before a sideways day. A typical day here moves about ${fmt(t.atr,0)} points (ATR).</div></section>`;
+  }
+  box.innerHTML=`<div class="tgrid" role="group" aria-label="Choose index">${cards}</div>
+    <div class="grid2">
+      <section class="panel"><h2>${esc(ix.name)}: ${esc(t.verdict)}</h2>
+        <div class="muted" style="font-size:13px;margin-bottom:8px">Daily chart, as of the ${esc(dLong(t.asOf))} close (${fmt(t.close)}).${isVol?" For VIX these are fear-level readings, not buy or sell signals.":""}</div>
+        <div class="scroll"><table><thead><tr><th>Indicator</th><th class="num">Value</th><th>Reading</th><th class="num">${isVol?"":"Signal"}</th></tr></thead><tbody>${rows}</tbody></table></div>
+        <div class="note">The verdict weighs the 200-day average and Supertrend double. Indicators describe what price has already done; they lag and often disagree. Use them alongside levels and risk limits, not as orders.</div>
+      </section>
+      ${ladder||`<section class="panel"><h2>How to read VIX</h2><p style="margin:0">India VIX is the market's expected volatility over the next 30 days. Below about 12 is calm, 12 to 18 normal, above 20 nervous. A rising VIX usually means wider intraday swings and pricier options.</p></section>`}
+    </div>`;
+  box.querySelectorAll(".tcard").forEach(b=>b.onclick=()=>{tsel=b.dataset.id;renderTech();});
+}
+
 /* ---------- options snapshot ---------- */
 function optionsPanel(o){
   if (!o) return "";
@@ -435,7 +491,7 @@ const noData = msg => { $("#window").textContent=msg; $("#brief").innerHTML=`<di
 async function loadAll(){
   try{
     const [ids, idx, wl] = await Promise.all([SRC.briefList(), SRC.indices(), SRC.watch()]);
-    INDICES=idx; WATCH=wl; renderTrends();
+    INDICES=idx; WATCH=wl; renderTrends(); renderTech();
     if (!ids.length) return noData("No brief yet. Run the morning update to create one.");
     await loadBrief(ids[0], ids.map(id=>({id})));
   }catch(e){
