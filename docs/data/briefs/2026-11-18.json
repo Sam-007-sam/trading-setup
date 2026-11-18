@@ -1,10 +1,10 @@
 {
  "date": "2026-11-18",
- "windowLabel": "Wed 18 Nov 2026, refreshed 02:32 PM IST. Covers the previous close to now",
+ "windowLabel": "Wed 18 Nov 2026, refreshed 02:35 PM IST. Covers the previous close to now",
  "bias": {
   "score": -0.04,
   "label": "Neutral",
-  "summary": "Rule-based read: risk assets moved -0.08% on average overnight and Brent moved -4.86%. Add an Anthropic API key for a written analysis with news."
+  "summary": "Rule-based read: risk assets moved -0.08% on average overnight and Brent moved -4.63%. Add an Anthropic API key for a written analysis with news."
  },
  "keyStats": [
   {
@@ -44,8 +44,8 @@
   },
   {
    "label": "Brent crude",
-   "value": "88.61",
-   "change": "-4.86%",
+   "value": "88.83",
+   "change": "-4.63%",
    "dir": "up"
   },
   {
@@ -113,38 +113,38 @@
   {
    "group": "Europe (last close)",
    "name": "DAX",
-   "value": "26,103.86",
-   "chg": 0.22
+   "value": "26,107.04",
+   "chg": 0.24
   },
   {
    "group": "Europe (last close)",
    "name": "FTSE 100",
-   "value": "10,661.00",
-   "chg": -0.27
+   "value": "10,662.92",
+   "chg": -0.25
   },
   {
    "group": "Commodities & FX",
    "name": "Brent crude ($/bbl)",
-   "value": "88.61",
-   "chg": -4.86
+   "value": "88.83",
+   "chg": -4.63
   },
   {
    "group": "Commodities & FX",
    "name": "WTI crude ($/bbl)",
-   "value": "82.62",
-   "chg": -3.94
+   "value": "82.73",
+   "chg": -3.81
   },
   {
    "group": "Commodities & FX",
    "name": "Gold ($/oz)",
-   "value": "3,770",
-   "chg": -2.43
+   "value": "3,772",
+   "chg": -2.39
   },
   {
    "group": "Commodities & FX",
    "name": "US dollar index",
-   "value": "103.84",
-   "chg": 0.33
+   "value": "103.85",
+   "chg": 0.34
   },
   {
    "group": "Commodities & FX",
@@ -161,8 +161,8 @@
   {
    "group": "Commodities & FX",
    "name": "Bitcoin ($)",
-   "value": "64,656",
-   "chg": -0.37
+   "value": "64,686",
+   "chg": -0.32
   }
  ],
  "globalNote": "Asia levels are early-morning readings and keep moving until their close.",
@@ -189,7 +189,7 @@
   "note": "Classic pivot levels from the last session (pivot 25,385). See the Indicators tab for the full picture."
  },
  "options": {
-  "asOf": "02:32 PM IST, 18 Nov",
+  "asOf": "02:35 PM IST, 18 Nov",
   "nifty": {
    "pcr": 0.85,
    "maxPain": 25150,
@@ -274,5 +274,5 @@
    "url": "https://www.nseindia.com"
   }
  ],
- "compiledNote": "Generated automatically at 02:32 PM IST."
+ "compiledNote": "Generated automatically at 02:35 PM IST."
 }
