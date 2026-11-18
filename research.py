@@ -72,16 +72,89 @@ GRID = {
     "stop_mode": ["range", "mid"],
     "skip_gap": [None, 0.5],
 }
+# Round 2 (added after round 1 found no survivors) tests mean reversion. Both rounds share
+# the same test period, so they are reported together and research stops after round 2.
+
+
+def make_gap_fade(min_gap, confirm, fill, stop_mult):
+    """Big opening gap: trade back toward the previous close after the first candle.
+    confirm: the first candle must already move toward the previous close.
+    fill: target = this fraction of the gap closed. Stop: beyond the first candle's extreme,
+    by stop_mult x that candle's range."""
+    def rule(i, bars, state, ctx):
+        if i != 0 or state["n"] >= 1 or not ctx.get("prevClose"):
+            return None
+        pc, o, b0 = ctx["prevClose"], bars[0]["o"], bars[0]
+        gap = (o / pc - 1) * 100
+        if abs(gap) < min_gap:
+            return None
+        side = -1 if gap > 0 else 1
+        if confirm and side * (b0["c"] - o) <= 0:
+            return None
+        rng = max(b0["h"] - b0["l"], o * 0.001)
+        stop = (b0["h"] + (stop_mult - 1) * rng) if side < 0 else (b0["l"] - (stop_mult - 1) * rng)
+        entry = b0["c"]
+        target = entry + side * abs(entry - pc) * fill
+        risk = abs(entry - stop)
+        if risk <= 0 or side * (target - entry) <= 0:
+            return None
+        return {"side": side, "stop": stop, "targetR": abs(target - entry) / risk, "trail": False}
+    return rule
+
+
+def make_range_fade(range_bars, last_entry, target, direction):
+    """Failed breakout: a candle closes outside the opening range, the next closes back inside;
+    trade back into the range. Stop at the breakout candle's extreme; target the range middle
+    or its far side. direction: none | trend (only fade breakouts against the daily trend)."""
+    def rule(i, bars, state, ctx):
+        if i < range_bars + 1 or state["n"] >= 1 or state["pos"] or bars[i]["t"] >= last_entry:
+            return None
+        hi = max(b["h"] for b in bars[:range_bars])
+        lo = min(b["l"] for b in bars[:range_bars])
+        prev, c = bars[i - 1], bars[i]["c"]
+        if prev["c"] > hi and lo < c < hi:
+            side, stop = -1, max(prev["h"], bars[i]["h"])
+        elif prev["c"] < lo and lo < c < hi:
+            side, stop = 1, min(prev["l"], bars[i]["l"])
+        else:
+            return None
+        if direction == "trend" and side != ctx.get("trend", 0):
+            return None
+        tgt = (hi + lo) / 2 if target == "mid" else (lo if side < 0 else hi)
+        risk = abs(c - stop)
+        if risk <= 0 or side * (tgt - c) <= 0:
+            return None
+        return {"side": side, "stop": stop, "targetR": abs(tgt - c) / risk, "trail": False}
+    return rule
+
+
+GAP_GRID = {"min_gap": [0.3, 0.5, 0.8], "confirm": [False, True], "fill": [0.5, 1.0], "stop_mult": [1.0, 1.5]}
+FADE_GRID = {"range_bars": [1, 2], "last_entry": ["11:00", "13:00"], "target": ["mid", "far"],
+             "direction": ["none", "trend"]}
+
+
+def _grid(g):
+    keys = list(g)
+    for combo in itertools.product(*(g[k] for k in keys)):
+        yield dict(zip(keys, combo))
 
 
 def variants():
-    keys = list(GRID)
-    for combo in itertools.product(*(GRID[k] for k in keys)):
-        p = dict(zip(keys, combo))
-        yield p, make_orb(**p)
+    for p in _grid(GRID):
+        yield {"family": "orb", **p}, make_orb(**p)
+    for p in _grid(GAP_GRID):
+        yield {"family": "gapfade", **p}, make_gap_fade(**p)
+    for p in _grid(FADE_GRID):
+        yield {"family": "rangefade", **p}, make_range_fade(**p)
 
 
 def label(p):
+    if p["family"] == "gapfade":
+        return (f"Gap fade: gap>{p['min_gap']}%, confirm={'yes' if p['confirm'] else 'no'}, "
+                f"target {int(p['fill'] * 100)}% fill, stop {p['stop_mult']}x first candle")
+    if p["family"] == "rangefade":
+        return (f"Failed-breakout fade {15 * p['range_bars']}m, entries<{p['last_entry']}, target={p['target']}, "
+                f"dir={p['direction']}")
     return (f"ORB {15 * p['range_bars']}m, dir={p['direction']}, target={p['target_r'] or 'none'}R, "
             f"trail={'BE' if p['trail'] else 'no'}, entries<{p['last_entry']}, stop={p['stop_mode']}, "
             f"gap-skip={p['skip_gap'] or 'no'}")
@@ -152,16 +225,26 @@ def research(data: dict) -> dict:
             "costPct": X.COST_PCT, "chosen": chosen, "survivors": survivors,
             "shareAllPassingTest": round(luck, 3),
             "shareAllPassingTrain": round(sum(passes(r, "train") for r in rows) / len(rows), 3),
+            "families": {f: {"n": sum(1 for r in rows if r["params"]["family"] == f),
+                             "passTest": sum(1 for r in rows if r["params"]["family"] == f and passes(r, "test")),
+                             "best": max((r for r in rows if r["params"]["family"] == f and eligible(r)),
+                                         key=train_key, default=None)}
+                         for f in ("orb", "gapfade", "rangefade")},
             "testPfAll": sorted(min(r["test"][m]["pf"] or 0 for m in prepared) for r in rows)}
 
 
 def write_report(res: dict, path: pathlib.Path) -> None:
+    fams = {}
+    for f in res.get("families", {}):
+        fams[f] = res["families"][f]
     lines = ["# Intraday rule research", "",
-             f"{res['variants']} variants of the opening-range breakout. Chosen on data up to {res['trainEnd']}, "
+             f"{res['variants']} variants: opening-range breakouts (round 1), gap fades and failed-breakout fades (round 2). Chosen on data up to {res['trainEnd']}, "
              f"tested once on later data. Costs {res['costPct']}% per side. A rule must be profitable "
              f"(profit factor > 1) on both Nifty and Bank Nifty.", ""]
     for m, s in res["spans"].items():
         lines.append(f"- {m}: {s['from']} to {s['to']}, {s['trainSessions']} training and {s['testSessions']} test sessions")
+    for f, v in fams.items():
+        lines.append(f"- {f}: {v['n']} variants, {v['passTest']} profitable on both indices in the test period")
     lines += ["", f"Share of ALL variants profitable on both indices: training {res['shareAllPassingTrain']:.0%}, "
                   f"test {res['shareAllPassingTest']:.0%}.", "", "## Top variants chosen on training data", "",
               "| Variant | Train PF (Nifty / Bank) | Test PF (Nifty / Bank) | Test return (Nifty / Bank) | Test trades |",
