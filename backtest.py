@@ -6,7 +6,10 @@ Rules (applied identically to every strategy):
     No look-ahead: a strategy only ever sees bars up to and including the signal bar.
   * One position at a time, fully invested (1x, no leverage), long or short.
   * COST_PCT is charged on every entry and every exit (brokerage, STT, slippage).
-  * While flat, money earns CASH_RATE_PCT a year (a liquid fund), accrued by calendar days.
+  * While flat, money earns CASH_RATE_PCT a year (a liquid fund), for the calendar days held in cash.
+  * Sharpe ratio is measured on returns above that same cash rate.
+  * Index prices exclude dividends (about 1-1.5% a year on Nifty), which understates buy-and-hold
+    and every long position against cash by roughly that much while invested.
   * Results are per index, not a portfolio.
 
 Writes docs/data/backtest.json for the dashboard's Backtest tab.
@@ -110,9 +113,13 @@ def run(bars: list[dict], target: list[int], start: int, cost_pct: float = COST_
     for i in range(start, len(bars)):
         bar = bars[i]
         want = target[i - 1]   # decided on the previous close
-        # 1) overnight gap from previous close to today's open, on the position held overnight
+        # 1) from the previous close to today's open, on what was held overnight:
+        #    the market's gap if invested, interest for the calendar days if in cash
         if pos != 0:
             eq *= 1 + pos * (bar["o"] / bars[i - 1]["c"] - 1)
+        elif cash_rate_pct:
+            gap = (dt.date.fromisoformat(bar["d"]) - dt.date.fromisoformat(bars[i - 1]["d"])).days
+            eq *= (1 + cash_rate_pct / 100) ** (gap / 365)
         # 2) change position at today's open
         if want != pos:
             if pos != 0:
@@ -121,13 +128,10 @@ def run(bars: list[dict], target: list[int], start: int, cost_pct: float = COST_
             if pos != 0:
                 eq *= 1 - cost
                 entry_px, entry_d, entry_eq = bar["o"], bar["d"], eq / (1 - cost)
-        # 3) open to close move on whatever we now hold; idle cash earns interest
+        # 3) open to close move on whatever we now hold
         if pos != 0:
             eq *= 1 + pos * (bar["c"] / bar["o"] - 1)
             days_in += 1
-        elif cash_rate_pct:
-            gap = (dt.date.fromisoformat(bar["d"]) - dt.date.fromisoformat(bars[i - 1]["d"])).days
-            eq *= (1 + cash_rate_pct / 100) ** (gap / 365)
         curve.append((bar["d"], eq))
     if pos != 0:   # mark the open trade to the last close
         trades.append({"side": "long" if pos == 1 else "short", "entry": entry_d, "exit": None,
@@ -135,10 +139,12 @@ def run(bars: list[dict], target: list[int], start: int, cost_pct: float = COST_
                        "pct": round((eq / entry_eq - 1) * 100, 2), "open": True,
                        "days": (dt.date.fromisoformat(bars[-1]["d"]) - dt.date.fromisoformat(entry_d)).days})
     return {"curve": curve, "trades": trades,
-            "stats": stats(curve, trades, pos, days_in / max(1, len(bars) - start))}
+            "stats": stats(curve, trades, pos, days_in / max(1, len(bars) - start),
+                           [bars[start - 1]["d"]] + [d for d, _ in curve])}
 
 
-def stats(curve, trades, final_pos=0, exposure=None) -> dict:
+def stats(curve, trades, final_pos=0, exposure=None, dates=None, rf_pct: float = CASH_RATE_PCT) -> dict:
+    """Sharpe is on daily returns ABOVE the risk-free (liquid fund) rate, annualised."""
     eqs = [e for _, e in curve]
     days = (dt.date.fromisoformat(curve[-1][0]) - dt.date.fromisoformat(curve[0][0])).days or 1
     total = eqs[-1] / 1.0 - 1
@@ -147,7 +153,12 @@ def stats(curve, trades, final_pos=0, exposure=None) -> dict:
     for e in eqs:
         peak = max(peak, e)
         mdd = min(mdd, e / peak - 1)
-    rets = [eqs[i] / eqs[i - 1] - 1 for i in range(1, len(eqs))]
+    full = [1.0] + eqs                     # equity before the first session, then each close
+    ds = dates or [curve[0][0]] + [d for d, _ in curve]
+    rets = []
+    for i in range(1, len(full)):
+        gap = (dt.date.fromisoformat(ds[i]) - dt.date.fromisoformat(ds[i - 1])).days
+        rets.append(full[i] / full[i - 1] - 1 - ((1 + rf_pct / 100) ** (gap / 365) - 1))
     mean = sum(rets) / len(rets) if rets else 0
     sd = (sum((r - mean) ** 2 for r in rets) / len(rets)) ** 0.5 if rets else 0
     closed = [t for t in trades if not t.get("open")]
@@ -156,7 +167,7 @@ def stats(curve, trades, final_pos=0, exposure=None) -> dict:
     in_mkt = exposure if exposure is not None else 1.0
     return {
         "totalPct": round(total * 100, 1), "cagrPct": round(cagr * 100, 1), "maxDdPct": round(mdd * 100, 1),
-        "sharpe": round(mean / sd * 252 ** 0.5, 2) if sd else None,
+        "sharpe": round(mean / sd * 252 ** 0.5, 2) if sd > 1e-9 else None,
         "trades": len(closed), "winRatePct": round(len(wins) / len(closed) * 100, 0) if closed else None,
         "avgWinPct": round(sum(wins) / len(wins), 2) if wins else None,
         "avgLossPct": round(sum(losses) / len(losses), 2) if losses else None,
