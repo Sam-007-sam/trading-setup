@@ -1,10 +1,10 @@
 {
  "date": "2026-11-18",
- "windowLabel": "Wed 18 Nov 2026, refreshed 01:27 PM IST. Covers the previous close to now",
+ "windowLabel": "Wed 18 Nov 2026, refreshed 02:24 PM IST. Covers the previous close to now",
  "bias": {
-  "score": -0.05,
+  "score": -0.04,
   "label": "Neutral",
-  "summary": "Rule-based read: risk assets moved -0.09% on average overnight and Brent moved -1.29%. Add an Anthropic API key for a written analysis with news."
+  "summary": "Rule-based read: risk assets moved -0.08% on average overnight and Brent moved -4.83%. Add an Anthropic API key for a written analysis with news."
  },
  "keyStats": [
   {
@@ -31,12 +31,6 @@
    "dir": "up"
   },
   {
-   "label": "FII net (17-Nov-2026)",
-   "value": "₹4,195 cr",
-   "change": "DII ₹+197 cr",
-   "dir": "up"
-  },
-  {
    "label": "USD/INR",
    "value": "93.50",
    "change": "-0.49%",
@@ -44,8 +38,8 @@
   },
   {
    "label": "Brent crude",
-   "value": "91.94",
-   "change": "-1.29%",
+   "value": "88.64",
+   "change": "-4.83%",
    "dir": "up"
   },
   {
@@ -77,8 +71,8 @@
   {
    "group": "US (last close)",
    "name": "CBOE VIX",
-   "value": "25.46",
-   "chg": 11.13
+   "value": "24.07",
+   "chg": -5.46
   },
   {
    "group": "Asia (this morning)",
@@ -89,8 +83,8 @@
   {
    "group": "Asia (this morning)",
    "name": "Hang Seng",
-   "value": "23,283",
-   "chg": -0.96
+   "value": "23,295",
+   "chg": -0.91
   },
   {
    "group": "Asia (this morning)",
@@ -113,38 +107,38 @@
   {
    "group": "Europe (last close)",
    "name": "DAX",
-   "value": "26,045.37",
-   "chg": -2.08
+   "value": "26,100.12",
+   "chg": 0.21
   },
   {
    "group": "Europe (last close)",
    "name": "FTSE 100",
-   "value": "10,689.90",
-   "chg": -1.76
+   "value": "10,653.87",
+   "chg": -0.34
   },
   {
    "group": "Commodities & FX",
    "name": "Brent crude ($/bbl)",
-   "value": "91.94",
-   "chg": -1.29
+   "value": "88.64",
+   "chg": -4.83
   },
   {
    "group": "Commodities & FX",
    "name": "WTI crude ($/bbl)",
-   "value": "84.22",
-   "chg": -2.08
+   "value": "82.64",
+   "chg": -3.92
   },
   {
    "group": "Commodities & FX",
    "name": "Gold ($/oz)",
-   "value": "3,769",
-   "chg": -2.47
+   "value": "3,770",
+   "chg": -2.45
   },
   {
    "group": "Commodities & FX",
    "name": "US dollar index",
-   "value": "103.75",
-   "chg": 0.25
+   "value": "103.80",
+   "chg": 0.3
   },
   {
    "group": "Commodities & FX",
@@ -161,8 +155,8 @@
   {
    "group": "Commodities & FX",
    "name": "Bitcoin ($)",
-   "value": "64,844",
-   "chg": -0.08
+   "value": "64,594",
+   "chg": -0.46
   }
  ],
  "globalNote": "Asia levels are early-morning readings and keep moving until their close.",
@@ -172,11 +166,7 @@
   "gainers": [],
   "losers": []
  },
- "flows": {
-  "dii": 196.93,
-  "fii": 4195.38,
-  "date": "17-Nov-2026"
- },
+ "flows": {},
  "levels": {
   "support": [
    25269,
@@ -188,23 +178,7 @@
   ],
   "note": "Classic pivot levels from the last session (pivot 25,385). See the Indicators tab for the full picture."
  },
- "options": {
-  "asOf": "01:27 PM IST, 18 Nov",
-  "nifty": {
-   "pcr": 0.77,
-   "maxPain": 25100,
-   "callWall": 26000,
-   "putWall": 25000,
-   "expiry": "23-Nov-2026"
-  },
-  "banknifty": {
-   "pcr": 1.17,
-   "maxPain": 60100,
-   "callWall": 62000,
-   "putWall": 60000,
-   "expiry": "23-Nov-2026"
-  }
- },
+ "options": null,
  "news": [
   {
    "cat": "Economic Times Markets",
@@ -274,5 +248,5 @@
    "url": "https://www.nseindia.com"
   }
  ],
- "compiledNote": "Generated automatically at 01:27 PM IST."
+ "compiledNote": "Generated automatically at 02:24 PM IST. Not refreshed: NSE option chain NIFTY: HTTP 403; NSE often blocks cloud servers, so this usually works when run from home; NSE option chain BANKNIFTY: HTTP 403; NSE often blocks cloud servers, so this usually works when run from home; NSE FII/DII: HTTP 403; NSE often blocks cloud servers, so this usually works when run from home."
 }
