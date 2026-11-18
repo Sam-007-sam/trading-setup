@@ -1,9 +1,9 @@
 """
 Intraday strategy backtests on 15-minute bars.
 
-Yahoo Finance only serves 15-minute history for the last ~60 days, so this is a
-short sample: read the results as "how did this behave recently", not proof.
-A broker data API (Upstox, Zerodha Kite) can supply years of intraday history.
+History comes from Upstox's market-data API (15-minute candles back to January 2022,
+see upstox_data.py). If Upstox is unavailable it falls back to Yahoo Finance, which only
+has the last ~60 days: then read the results as a recent snapshot, not proof.
 
 Rules applied to every strategy:
   * Signals are read on a 15-minute candle's CLOSE and filled at the NEXT candle's OPEN.
@@ -37,6 +37,7 @@ SQUARE_OFF = "15:15"
 LAST_ENTRY = "15:00"     # no new positions in the final candle before square-off
 NARROW_CPR_PCT = 0.25
 MARKETS = [("nifty50", "Nifty 50", "^NSEI"), ("banknifty", "Nifty Bank", "^NSEBANK")]
+HISTORY_MONTHS = 36
 
 
 # ---------------------------------------------------------------- per-day simulation
@@ -218,11 +219,18 @@ def main() -> int:
     result = {"generated": now.isoformat(timespec="minutes"), "costPct": COST_PCT, "interval": "15m", "markets": []}
     for mid, name, ticker in MARKETS:
         try:
-            candles = yf_15m(ticker)
+            try:
+                import upstox_data
+                start = max(dt.date(2022, 1, 3), now.date() - dt.timedelta(days=HISTORY_MONTHS * 30))
+                candles = upstox_data.candles(upstox_data.KEYS[ticker], "minutes", 15, start, now.date())
+                source = "Upstox"
+            except Exception as e:
+                log.warning("%s: Upstox history unavailable (%s); using Yahoo's 60 days", name, e)
+                candles, source = yf_15m(ticker), "Yahoo Finance (last 60 days only)"
             # leave out today's session if it hasn't finished
             if (now.hour, now.minute) < (15, 30):
                 candles = [c for c in candles if c["d"] != now.date().isoformat()]
-            result["markets"].append({"id": mid, "name": name, **backtest_market(candles)})
+            result["markets"].append({"id": mid, "name": name, "source": source, **backtest_market(candles)})
             log.info("%s: %d sessions", name, result["markets"][-1]["sessions"])
         except Exception as e:
             log.warning("%s failed: %s", name, e)

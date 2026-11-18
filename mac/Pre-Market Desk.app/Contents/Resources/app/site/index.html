@@ -453,7 +453,7 @@ function renderBT(){
   const box=$("#bt");
   const modes = `<div class="chips" role="group" aria-label="Timeframe" style="margin-bottom:8px">
     <button class="chip" data-mode="daily" aria-pressed="${btMode==="daily"}">Daily (5 years)</button>
-    <button class="chip" data-mode="intraday" aria-pressed="${btMode==="intraday"}">Intraday (last 60 days)</button></div>`;
+    <button class="chip" data-mode="intraday" aria-pressed="${btMode==="intraday"}">Intraday (15-minute)</button></div>`;
   const bindModes = () => box.querySelectorAll("[data-mode]").forEach(b=>b.onclick=()=>{btMode=b.dataset.mode;renderBT();});
   if(btMode==="intraday"){ box.innerHTML = modes + intradayHTML(); bindModes(); bindIntraday(box); return; }
   if(!BT || !(BT.markets||[]).length){ box.innerHTML=modes+`<div class="panel empty">Backtest results appear after the next data refresh.</div>`; bindModes(); return; }
@@ -517,7 +517,7 @@ function intradayHTML(){
   return `<div class="chips" role="group" aria-label="Choose index">${ID.markets.map(mm=>`<button class="chip" aria-pressed="${mm.id===btM}" data-m="${esc(mm.id)}">${esc(mm.name)}</button>`).join("")}</div>
   <section class="panel">
     <h2>${esc(m.name)} intraday: ${esc(dLong(m.from))} to ${esc(dLong(m.to))}</h2>
-    <div class="muted" style="font-size:13px;margin-bottom:8px">${m.sessions} sessions of 15-minute candles. Signals on a candle's close, filled at the next candle's open; stops fill at the stop price; everything squared off at 3:15 PM; ${ID.costPct}% cost per side. Only about 60 days of history is free, so treat these as a recent snapshot, not proof.</div>
+    <div class="muted" style="font-size:13px;margin-bottom:8px">${m.sessions} sessions of 15-minute candles. Signals on a candle's close, filled at the next candle's open; stops fill at the stop price; everything squared off at 3:15 PM; ${ID.costPct}% cost per side. Data: ${esc(m.source||"Yahoo Finance (last 60 days only)")}.${/60 days/.test(m.source||"60 days")?" That's a short sample, so treat these as a recent snapshot, not proof.":""}</div>
     <div class="scroll"><table class="btsum"><thead><tr><th>Strategy</th><th class="num">Total return</th><th class="num">Worst fall</th><th class="num">Trades</th><th class="num">Per day</th><th class="num">Win rate</th><th class="num">Avg win / loss</th><th class="num">Profit factor</th><th class="num">Stops hit</th></tr></thead><tbody>${rows}</tbody></table></div>
   </section>
   <section class="panel">
