@@ -14,7 +14,7 @@
   "quizWrong": []
  },
  "suggestions": {
-  "nifty50-11:15": {
+  "nifty50-11:45": {
    "market": "nifty50",
    "name": "Nifty 50",
    "trend": 1,
@@ -22,20 +22,20 @@
    "rangeLow": 25115.9,
    "signal": true,
    "side": 1,
-   "entry": 25332.6,
+   "entry": 25345.85,
    "stop": 25185.75,
-   "target": 25626.3,
-   "riskPoints": 146.85,
+   "target": 25666.05,
+   "riskPoints": 160.1,
    "size": {
     "ok": false,
-    "reason": "Can't size this safely: one lot would risk about \u20b95,260 at the stop, above your \u20b91,250 per-trade limit."
+    "reason": "Can't size this safely: one lot would risk about \u20b95,438 at the stop, above your \u20b91,250 per-trade limit."
    },
-   "candle": "11:15",
-   "id": "nifty50-11:15",
-   "validUntil": "11:45",
-   "message": "Can't size this safely: one lot would risk about \u20b95,260 at the stop, above your \u20b91,250 per-trade limit."
+   "candle": "11:45",
+   "id": "nifty50-11:45",
+   "validUntil": "12:15",
+   "message": "Can't size this safely: one lot would risk about \u20b95,438 at the stop, above your \u20b91,250 per-trade limit."
   },
-  "banknifty-11:15": {
+  "banknifty-11:45": {
    "market": "banknifty",
    "name": "Nifty Bank",
    "trend": 1,
@@ -43,18 +43,18 @@
    "rangeLow": 61951.1,
    "signal": true,
    "side": 1,
-   "entry": 62468.15,
+   "entry": 62510.45,
    "stop": 61951.1,
-   "target": 63502.25,
-   "riskPoints": 517.05,
+   "target": 63629.15,
+   "riskPoints": 559.35,
    "size": {
     "ok": false,
-    "reason": "Can't size this safely: one lot would risk about \u20b96,053 at the stop, above your \u20b91,250 per-trade limit."
+    "reason": "Can't size this safely: one lot would risk about \u20b96,319 at the stop, above your \u20b91,250 per-trade limit."
    },
-   "candle": "11:15",
-   "id": "banknifty-11:15",
-   "validUntil": "11:45",
-   "message": "Can't size this safely: one lot would risk about \u20b96,053 at the stop, above your \u20b91,250 per-trade limit."
+   "candle": "11:45",
+   "id": "banknifty-11:45",
+   "validUntil": "12:15",
+   "message": "Can't size this safely: one lot would risk about \u20b96,319 at the stop, above your \u20b91,250 per-trade limit."
   }
  },
  "position": null,
