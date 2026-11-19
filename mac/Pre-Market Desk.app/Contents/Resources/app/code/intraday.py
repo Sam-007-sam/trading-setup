@@ -293,7 +293,8 @@ def main() -> int:
             last_d = candles[-1]["d"]
             day = [c for c in candles if c["d"] == last_d]
             last = {"d": last_d, "o": day[0]["o"], "h": max(c["h"] for c in day), "l": min(c["l"] for c in day),
-                    "c": day[-1]["c"], "firstCandle": day[0]["t"], "candles": len(day)}
+                    "c": day[-1]["c"], "firstCandle": day[0]["t"], "candles": len(day),
+                    "bars": [[c["t"], round(c["o"], 2), round(c["h"], 2), round(c["l"], 2), round(c["c"], 2)] for c in day]}
             result["markets"].append({"id": mid, "name": name, "source": source, "lastSession": last,
                                       **backtest_market(candles)})
             log.info("%s: %d sessions", name, result["markets"][-1]["sessions"])

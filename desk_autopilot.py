@@ -23,9 +23,11 @@ import risk as R
 
 QUIZ_OK = {q["id"]: q["answer"] for q in R.QUIZ}
 ACCOUNTS = {
-    "futures": {"trade": True, "capital": 500000, "maxLoss": 10000, "maxTrades": 2, "instrument": "futures",
+    # Sized so one lot fits typical stops (Nifty ~100-200 pts x 65 qty): a smaller test account
+    # is correctly refused every trade, which tests nothing (seen on 19 Nov 2026).
+    "futures": {"trade": True, "capital": 500000, "maxLoss": 25000, "maxTrades": 1, "instrument": "futures",
                 "experience": "Over 2 years", "quiz": QUIZ_OK},
-    "options": {"trade": True, "capital": 50000, "maxLoss": 2500, "maxTrades": 2, "instrument": "options",
+    "options": {"trade": True, "capital": 100000, "maxLoss": 5000, "maxTrades": 1, "instrument": "options",
                 "experience": "Over 2 years", "quiz": QUIZ_OK},
 }
 STOP_AT = "15:17"

@@ -291,6 +291,22 @@ class Desk:
             for m in MARKETS:
                 out.append(self._check_market(m, now))
             live = [x for x in out if x.get("signal")]
+            seen = s.setdefault("signalsSeen", [])
+            for x in live:                      # audit trail: every distinct signal, once
+                if x["id"] not in seen:
+                    seen.append(x["id"])
+                    z = x.get("size") or {}
+                    self.log(f"Signal {x['name']} {'BUY' if x['side'] > 0 else 'SELL'} on the {x['candle']} candle: "
+                             f"entry ~{x['entry']:,.2f}, stop {x['stop']:,.2f} ({x['riskPoints']:,.0f} pts), "
+                             f"target {x['target']:,.2f}. "
+                             + (f"Suggested: {z['qty']} qty, ₹{z['riskAtStop']:,} at risk." if z.get("ok")
+                                else f"Not suggested: {x.get('message') or z.get('reason')}"))
+            for x in out:                       # signals that fired but were skipped (price ran away etc.)
+                if not x.get("signal") and x.get("message", "").startswith("Signal fired"):
+                    key = f"{x['market']}-skip-{now.strftime('%H:%M')[:4]}"
+                    if key not in seen:
+                        seen.append(key)
+                        self.log(f"{x['name']}: {x['message']}")
             s["suggestions"] = {x["id"]: x for x in live}
             self.save()
             return {"status": "ok", "markets": out}
@@ -311,6 +327,14 @@ class Desk:
         hi, lo = done[0]["h"], done[0]["l"]
         res.update(rangeHigh=hi, rangeLow=lo)
         taken = sum(1 for t in self.state["trades"] if t["market"] == market)
+        # Like the backtest, only the FIRST breakout candle of the day counts; later candles that
+        # close beyond the range would mean a worse entry and a bigger stop than the tested rule.
+        first = next((i for i in range(1, len(done))
+                      if X.s_orb_plus(i, done[:i + 1], {"n": 0, "pos": 0}, {"trend": info["trend"]})), None)
+        if first is not None and first != len(done) - 1:
+            res["message"] = (f"The breakout came on the {done[first]['t']} candle and that setup has passed; "
+                              "the tested rule takes only the first breakout of the day.")
+            return res
         sig = X.s_orb_plus(len(done) - 1, done, {"n": taken, "pos": 0}, {"trend": info["trend"]})
         width = (hi - lo) / done[-1]["c"] * 100
         if not info["trend"]:
