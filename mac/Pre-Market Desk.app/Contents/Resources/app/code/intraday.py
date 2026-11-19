@@ -281,6 +281,7 @@ def main() -> int:
             try:
                 import upstox_data
                 start = max(dt.date(2022, 1, 3), now.date() - dt.timedelta(days=HISTORY_MONTHS * 30))
+                # today's session is included once the market has closed (filtered below if not)
                 candles = upstox_data.candles(upstox_data.KEYS[ticker], "minutes", 15, start, now.date())
                 source = "Upstox"
             except Exception as e:
@@ -289,7 +290,12 @@ def main() -> int:
             # leave out today's session if it hasn't finished
             if (now.hour, now.minute) < (15, 30):
                 candles = [c for c in candles if c["d"] != now.date().isoformat()]
-            result["markets"].append({"id": mid, "name": name, "source": source, **backtest_market(candles)})
+            last_d = candles[-1]["d"]
+            day = [c for c in candles if c["d"] == last_d]
+            last = {"d": last_d, "o": day[0]["o"], "h": max(c["h"] for c in day), "l": min(c["l"] for c in day),
+                    "c": day[-1]["c"], "firstCandle": day[0]["t"], "candles": len(day)}
+            result["markets"].append({"id": mid, "name": name, "source": source, "lastSession": last,
+                                      **backtest_market(candles)})
             log.info("%s: %d sessions", name, result["markets"][-1]["sessions"])
         except Exception as e:
             log.warning("%s failed: %s", name, e)

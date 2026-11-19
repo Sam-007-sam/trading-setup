@@ -29,9 +29,26 @@ def _headers() -> dict:
     return h
 
 
+IST = dt.timezone(dt.timedelta(hours=5, minutes=30))
+
+
+def today_candles(instrument_key: str, unit: str, interval: int) -> list[dict]:
+    """The current session's candles (the historical endpoint stops at the previous day)."""
+    key = urllib.parse.quote(instrument_key, safe="")
+    r = requests.get(f"{BASE}/intraday/{key}/{unit}/{interval}", headers=_headers(), timeout=30)
+    r.raise_for_status()
+    out = []
+    for row in r.json().get("data", {}).get("candles", []):
+        ts = dt.datetime.fromisoformat(str(row[0]))
+        out.append({"d": ts.date().isoformat(), "t": ts.strftime("%H:%M"),
+                    "o": float(row[1]), "h": float(row[2]), "l": float(row[3]), "c": float(row[4])})
+    return sorted(out, key=lambda x: x["t"])
+
+
 def candles(instrument_key: str, unit: str, interval: int, start: dt.date, end: dt.date,
             chunk_days: int = 28) -> list[dict]:
-    """[{d, t, o, h, l, c}] in time order, IST. Fetches in chunks under Upstox's 1-month limit."""
+    """[{d, t, o, h, l, c}] in time order, IST. Fetches in chunks under Upstox's 1-month limit.
+    If `end` is today (IST), today's candles so far are added from the intraday endpoint."""
     key = urllib.parse.quote(instrument_key, safe="")
     out, seen = [], set()
     to = end
@@ -57,6 +74,11 @@ def candles(instrument_key: str, unit: str, interval: int, start: dt.date, end: 
                         "o": float(row[1]), "h": float(row[2]), "l": float(row[3]), "c": float(row[4])})
         to = frm - dt.timedelta(days=1)
         time.sleep(0.3)   # stay well inside the rate limit
+    if end >= dt.datetime.now(IST).date():
+        try:
+            out += [c for c in today_candles(instrument_key, unit, interval) if c["d"] not in {x["d"] for x in out}]
+        except Exception:
+            pass                       # history is still usable without today
     out.sort(key=lambda x: (x["d"], x["t"]))
     if not out:
         raise ValueError(f"Upstox returned no candles for {instrument_key}")

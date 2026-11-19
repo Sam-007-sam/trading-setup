@@ -117,7 +117,7 @@ def run(bars: list[dict], target: list[int], start: int, cost_pct: float = COST_
         #    the market's gap if invested, interest for the calendar days if in cash
         if pos != 0:
             eq *= 1 + pos * (bar["o"] / bars[i - 1]["c"] - 1)
-        elif cash_rate_pct:
+        elif cash_rate_pct and i > start:          # no interest for the night before the start
             gap = (dt.date.fromisoformat(bar["d"]) - dt.date.fromisoformat(bars[i - 1]["d"])).days
             eq *= (1 + cash_rate_pct / 100) ** (gap / 365)
         # 2) change position at today's open
