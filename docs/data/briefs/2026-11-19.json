@@ -1,0 +1,319 @@
+{
+ "date": "2026-11-19",
+ "windowLabel": "Thu 19 Nov 2026, refreshed 09:41 AM IST. Covers the previous close to now",
+ "bias": {
+  "score": -0.13,
+  "label": "Mildly negative",
+  "summary": "Rule-based read: risk assets moved -0.26% on average overnight and Brent moved -4.26%. Add an Anthropic API key for a written analysis with news."
+ },
+ "keyStats": [
+  {
+   "label": "GIFT Nifty (pre-open)",
+   "value": "—",
+   "dir": "flat"
+  },
+  {
+   "label": "Nifty 50 close",
+   "value": "25,227.95",
+   "change": "-0.63%",
+   "dir": "down"
+  },
+  {
+   "label": "Bank Nifty close",
+   "value": "62,038.65",
+   "change": "-0.38%",
+   "dir": "down"
+  },
+  {
+   "label": "India VIX",
+   "value": "15.57",
+   "change": "+0.32%",
+   "dir": "down"
+  },
+  {
+   "label": "FII net (18-Nov-2026)",
+   "value": "₹5,867 cr",
+   "change": "DII ₹-3,160 cr",
+   "dir": "up"
+  },
+  {
+   "label": "USD/INR",
+   "value": "93.47",
+   "change": "-0.01%",
+   "dir": "up"
+  },
+  {
+   "label": "Brent crude",
+   "value": "89.17",
+   "change": "-4.26%",
+   "dir": "up"
+  },
+  {
+   "label": "US 10Y yield",
+   "value": "5.066",
+   "change": "-0.73%",
+   "dir": "up"
+  }
+ ],
+ "global": [
+  {
+   "group": "US (last close)",
+   "name": "Dow Jones",
+   "value": "50,198.20",
+   "chg": -1.11
+  },
+  {
+   "group": "US (last close)",
+   "name": "S&P 500",
+   "value": "7,323.63",
+   "chg": -0.23
+  },
+  {
+   "group": "US (last close)",
+   "name": "Nasdaq Composite",
+   "value": "24,429.88",
+   "chg": 0.42
+  },
+  {
+   "group": "US (last close)",
+   "name": "CBOE VIX",
+   "value": "24.56",
+   "chg": -3.53
+  },
+  {
+   "group": "Asia (this morning)",
+   "name": "Nikkei 225",
+   "value": "59,409",
+   "chg": 0.65
+  },
+  {
+   "group": "Asia (this morning)",
+   "name": "Hang Seng",
+   "value": "22,855",
+   "chg": -1.89
+  },
+  {
+   "group": "Asia (this morning)",
+   "name": "Kospi",
+   "value": "5,055",
+   "chg": -0.24
+  },
+  {
+   "group": "Asia (this morning)",
+   "name": "Shanghai",
+   "value": "3,588",
+   "chg": 0.09
+  },
+  {
+   "group": "Asia (this morning)",
+   "name": "ASX 200",
+   "value": "8,733",
+   "chg": -1.01
+  },
+  {
+   "group": "Europe (last close)",
+   "name": "DAX",
+   "value": "25,736.24",
+   "chg": -1.19
+  },
+  {
+   "group": "Europe (last close)",
+   "name": "FTSE 100",
+   "value": "10,551.20",
+   "chg": -1.3
+  },
+  {
+   "group": "Commodities & FX",
+   "name": "Brent crude ($/bbl)",
+   "value": "89.17",
+   "chg": -4.26
+  },
+  {
+   "group": "Commodities & FX",
+   "name": "WTI crude ($/bbl)",
+   "value": "82.03",
+   "chg": -4.63
+  },
+  {
+   "group": "Commodities & FX",
+   "name": "Gold ($/oz)",
+   "value": "3,724",
+   "chg": -3.63
+  },
+  {
+   "group": "Commodities & FX",
+   "name": "US dollar index",
+   "value": "103.96",
+   "chg": 0.45
+  },
+  {
+   "group": "Commodities & FX",
+   "name": "USD/INR",
+   "value": "93.47",
+   "chg": -0.01
+  },
+  {
+   "group": "Commodities & FX",
+   "name": "US 10Y yield (%)",
+   "value": "5.066",
+   "chg": -0.73
+  },
+  {
+   "group": "Commodities & FX",
+   "name": "Bitcoin ($)",
+   "value": "63,311",
+   "chg": -2.44
+  }
+ ],
+ "globalNote": "Asia levels are early-morning readings and keep moving until their close.",
+ "india": {
+  "recap": "Nifty 50 closed at 25,227.95 (-0.63%) on 2026-11-18, and Bank Nifty at 62,038.65 (-0.38%). 2 of 10 sector indices rose; PSU Bank led (+0.59%) and Metal lagged (-2.46%).",
+  "sectors": [
+   {
+    "name": "PSU Bank",
+    "chg": 0.59
+   },
+   {
+    "name": "Pharma",
+    "chg": 0.15
+   },
+   {
+    "name": "FMCG",
+    "chg": -0.09
+   },
+   {
+    "name": "Bank",
+    "chg": -0.38
+   },
+   {
+    "name": "Energy",
+    "chg": -0.53
+   },
+   {
+    "name": "Financial Svcs",
+    "chg": -0.72
+   },
+   {
+    "name": "Realty",
+    "chg": -0.85
+   },
+   {
+    "name": "IT",
+    "chg": -1.24
+   },
+   {
+    "name": "Auto",
+    "chg": -1.35
+   },
+   {
+    "name": "Metal",
+    "chg": -2.46
+   }
+  ],
+  "gainers": [],
+  "losers": []
+ },
+ "flows": {
+  "dii": -3159.9,
+  "fii": 5866.78,
+  "date": "18-Nov-2026"
+ },
+ "levels": {
+  "support": [
+   25116,
+   25005
+  ],
+  "resistance": [
+   25365,
+   25503
+  ],
+  "note": "Classic pivot levels from the last session (pivot 25,254). See the Indicators tab for the full picture."
+ },
+ "options": {
+  "asOf": "09:41 AM IST, 19 Nov",
+  "nifty": {
+   "pcr": 0.86,
+   "maxPain": 25100,
+   "callWall": 26000,
+   "putWall": 24000,
+   "expiry": "23-Nov-2026"
+  },
+  "banknifty": {
+   "pcr": 1.2,
+   "maxPain": 60400,
+   "callWall": 62000,
+   "putWall": 60000,
+   "expiry": "23-Nov-2026"
+  }
+ },
+ "news": [
+  {
+   "cat": "Economic Times Markets",
+   "impact": "neu",
+   "title": "Sterlite Technologies among 3 stocks showing White Marubozu pattern",
+   "body": "Three Nifty500 stocks featured in StockEdge’s White Marubozu bullish scanner on November 19, indicating strong upward price momentum during the trading session."
+  },
+  {
+   "cat": "Economic Times Markets",
+   "impact": "neu",
+   "title": "CreditAccess Grameen among 7 stocks closing below VWAP",
+   "body": "Seven Nifty 500 stocks, including CreditAccess Grameen, Swan Corp, Black Box and Torrent Pharmaceuticals, closed more than 1% below their respective Volume Weighted Average Prices (VWAPs) on November 18, according to Sto"
+  },
+  {
+   "cat": "Economic Times Markets",
+   "impact": "neu",
+   "title": "Negative Breakout: These 6 stocks dropped below their 200 DMAs",
+   "body": "Trading below the 200 DMA is generally viewed as a bearish signal, indicating that a stock is trading below its long-term trend. The 200 DMA is a widely tracked technical indicator that traders use to assess a stock's br"
+  },
+  {
+   "cat": "Economic Times Markets",
+   "impact": "neu",
+   "title": "Eicher Motors Share Price Live Updates: Eicher Motors Achieves Significant Price Movement",
+   "body": ""
+  },
+  {
+   "cat": "Economic Times Markets",
+   "impact": "neu",
+   "title": "Britannia Share Price Live Updates: Britannia's Stock Surges Past Moving Average",
+   "body": ""
+  },
+  {
+   "cat": "Moneycontrol Market Reports",
+   "impact": "neu",
+   "title": "Taking Stock: Market fails to hold on to day#39;s gains, ends marginally higher",
+   "body": " Grasim Industries, Bharti Airtel, Nestle India, Maruti Suzuki and HCL Technologies were the biggest Nifty gainers, while losers included Sun Pharma, BPCL, Reliance Industries, MM and Hindalco Industries"
+  },
+  {
+   "cat": "Moneycontrol Market Reports",
+   "impact": "neu",
+   "title": "Sensex, Nifty gain for third day in a row; easing volatility to support bull trend",
+   "body": " Analysts expect the market to maintain the bullish undertone as elections and corporate earnings season continue"
+  },
+  {
+   "cat": "Moneycontrol Market Reports",
+   "impact": "neu",
+   "title": "Mid-day Mood | Cooling volatility sparks market rally, India VIX sees steepest fall in 4 years",
+   "body": " Broader markets outperformed benchmarks, with the BSE Midcap and BSE Smallcap rising up to 0.9 percent"
+  },
+  {
+   "cat": "Moneycontrol Market Reports",
+   "impact": "neu",
+   "title": "Sensex, Nifty extend gains to 3rd day, Q4 results to guide stock-specific action",
+   "body": " India VIX, which measures near-term volatility saw a sharp fall of 18 percent to trade around 10.42"
+  }
+ ],
+ "watch": [],
+ "watchNotes": {},
+ "events": [],
+ "sources": [
+  {
+   "name": "Yahoo Finance",
+   "url": "https://finance.yahoo.com"
+  },
+  {
+   "name": "NSE India",
+   "url": "https://www.nseindia.com"
+  }
+ ],
+ "compiledNote": "Generated automatically at 09:41 AM IST."
+}
