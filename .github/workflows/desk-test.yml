@@ -2,14 +2,17 @@ name: Trade desk live paper test
 
 on:
   schedule:
-    - cron: "50 3 * * 1-5"   # 03:50 UTC = 9:20 AM IST, Monday to Friday
+    - cron: "50 3 * * 1-5"   # 9:20 AM IST, Monday to Friday
+    - cron: "5 4 * * 1-5"    # 9:35 AM IST backup (GitHub's scheduler is best-effort)
+    - cron: "25 4 * * 1-5"   # 9:55 AM IST backup
+    - cron: "5 5 * * 1-5"    # 10:35 AM IST backup
   workflow_dispatch: {}
 
 permissions:
   contents: write
 
-concurrency:
-  group: desk-test
+concurrency:              # a backup that fires while a test is running waits, then exits at once
+  group: desk-test        # (the session is over by then), so only one test trades per day
   cancel-in-progress: false
 
 jobs:
