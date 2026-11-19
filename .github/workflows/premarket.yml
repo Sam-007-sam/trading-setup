@@ -29,29 +29,38 @@ jobs:
   brief:
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    env:
-      EVENING: ${{ contains(fromJSON('["15 10 * * 1-5","45 10 * * 1-5","25 11 * * 1-5"]'), github.event.schedule) || inputs.run == 'evening' }}
     steps:
       - uses: actions/checkout@v4
       - name: Decide whether this run is needed
         id: decide
         env:
           MANUAL: ${{ github.event_name == 'workflow_dispatch' }}
+          INPUT_RUN: ${{ inputs.run }}
         run: |
+          # GitHub's scheduler can start a run hours late, so for scheduled runs the job is
+          # chosen by the clock when it actually starts, not by which schedule fired it:
+          #   06:00-11:00 IST -> morning;  15:40-23:59 and 00:00-05:59 IST -> after-close;
+          #   anything else -> skip.
           today=$(TZ=Asia/Kolkata date +%F); now=$(TZ=Asia/Kolkata date +%H%M)
           skip=false
-          if [ "$MANUAL" != "true" ]; then
-            if [ "$EVENING" = "true" ]; then
-              # done if paper.json was generated today after 15:40 IST
-              gen=$(python -c "import json;print(json.load(open('docs/data/paper.json'))['generated'])" 2>/dev/null || echo "")
-              [ "${gen:0:10}" = "$today" ] && [ "${gen:11:2}${gen:14:2}" \> "1539" ] && skip=true
-            else
-              # done if today's brief exists; too late to be a morning brief after 11:00
-              [ -f "docs/data/briefs/$today.json" ] && skip=true
-              [ "$now" \> "1100" ] && skip=true
-            fi
+          if [ "$MANUAL" = "true" ]; then
+            [ "$INPUT_RUN" = "evening" ] && evening=true || evening=false
+          elif [ "$now" \> "0559" ] && [ "$now" \< "1100" ]; then
+            evening=false
+            [ -f "docs/data/briefs/$today.json" ] && skip=true        # morning work already done
+          elif [ "$now" \> "1539" ] || [ "$now" \< "0600" ]; then
+            evening=true
+            # after-close work is done if paper.json was generated after 15:40 IST on the
+            # session day (today, or yesterday for an overnight run)
+            [ "$now" \< "0600" ] && day=$(TZ=Asia/Kolkata date -d yesterday +%F) || day=$today
+            gen=$(python -c "import json;print(json.load(open('docs/data/paper.json'))['generated'])" 2>/dev/null || echo "")
+            if [ "${gen:0:10}" \> "$day" ]; then skip=true
+            elif [ "${gen:0:10}" = "$day" ] && [ "${gen:11:2}${gen:14:2}" \> "1539" ]; then skip=true; fi
+          else
+            evening=false; skip=true                                   # market hours: nothing to do
           fi
-          echo "skip=$skip" >> "$GITHUB_OUTPUT"; echo "skip=$skip (today=$today now=$now evening=$EVENING)"
+          echo "skip=$skip" >> "$GITHUB_OUTPUT"; echo "evening=$evening" >> "$GITHUB_OUTPUT"
+          echo "skip=$skip evening=$evening (today=$today now=$now manual=$MANUAL)"
       - uses: actions/setup-python@v5
         if: steps.decide.outputs.skip != 'true'
         with:
@@ -60,7 +69,7 @@ jobs:
       - run: pip install -r requirements.txt
         if: steps.decide.outputs.skip != 'true'
       - name: Build brief
-        if: steps.decide.outputs.skip != 'true' && env.EVENING != 'true'
+        if: steps.decide.outputs.skip != 'true' && steps.decide.outputs.evening != 'true'
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: python fetch.py
@@ -71,13 +80,15 @@ jobs:
         if: steps.decide.outputs.skip != 'true'
         run: python intraday.py || echo "intraday backtest failed; keeping the previous results"
       - name: Walk-forward research
-        if: steps.decide.outputs.skip != 'true' && env.EVENING != 'true'
+        if: steps.decide.outputs.skip != 'true' && steps.decide.outputs.evening != 'true'
         run: python walkforward.py || echo "walk-forward failed; keeping the previous results"
       - name: Paper trading
         if: steps.decide.outputs.skip != 'true'
         run: python paper.py || echo "paper trading update failed; keeping the previous ledger"
       - name: Commit data
         if: steps.decide.outputs.skip != 'true'
+        env:
+          EVENING: ${{ steps.decide.outputs.evening }}
         run: |
           git config user.name "premarket-bot"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
