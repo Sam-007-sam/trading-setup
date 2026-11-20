@@ -1,0 +1,40 @@
+{
+ "date": "2026-11-20",
+ "profile": {
+  "allowed": true,
+  "mode": "paper",
+  "capital": 500000,
+  "maxLoss": 25000,
+  "maxTrades": 1,
+  "perTradeRisk": 25000,
+  "instrument": "futures",
+  "notes": [
+   "Live trading is not switched on in this app, so trades are simulated with real prices."
+  ],
+  "quizWrong": []
+ },
+ "suggestions": {},
+ "position": null,
+ "trades": [],
+ "realized": 0.0,
+ "locked": null,
+ "log": [
+  {
+   "t": "17:45:09",
+   "msg": "Session started: paper mode, max loss \u20b925,000, 1 trade(s), futures"
+  }
+ ],
+ "answers": {
+  "trade": true,
+  "capital": 500000,
+  "maxLoss": 25000,
+  "maxTrades": 1,
+  "instrument": "futures",
+  "experience": "Over 2 years",
+  "quiz": {
+   "stop": 1,
+   "option": 1,
+   "limit": 2
+  }
+ }
+}
